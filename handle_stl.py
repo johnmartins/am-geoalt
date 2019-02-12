@@ -119,7 +119,7 @@ def print_stl_information(model):
 
 
 # Load model
-model = mesh.Mesh.from_file('models/hollow_square.stl')
+model = mesh.Mesh.from_file('models/u_shape_arc.stl')
 # Print info
 print_stl_information(model)
 # Set faces
@@ -131,8 +131,12 @@ fig = plt.figure()
 axes = mplot3d.Axes3D(fig)
 
 # Add vectors from models to plot
-axes.add_collection3d(mplot3d.art3d.Poly3DCollection(faces.get_verticies(vtype="good"), facecolors="g"))
-axes.add_collection3d(mplot3d.art3d.Poly3DCollection(faces.get_verticies(vtype="bad"), facecolors="r"))
+good_collection = mplot3d.art3d.Poly3DCollection(faces.get_verticies(vtype="good"), facecolors="g", linewidths=1)
+good_collection.set_edgecolor('black')
+axes.add_collection3d(good_collection)
+bad_collection = mplot3d.art3d.Poly3DCollection(faces.get_verticies(vtype="bad"), facecolors="r", linewidths=1)
+bad_collection.set_edgecolor('black')
+axes.add_collection3d(bad_collection)
 
 # Scale automatically
 scale = model.points.flatten(-1)
@@ -143,7 +147,8 @@ axes.scatter3D(model.x,model.y,model.z,color='yellow')
 
 # Plot wireframe (does not show all edges)
 for i in range(0,len(model.vectors)):
-    axes.plot_wireframe(np.array(model.x[i]), np.array(model.y[i]), np.array([model.z[i], model.z[i]]), color="black")
+    #axes.plot_wireframe(np.array(model.x[i]), np.array(model.y[i]), np.array([model.z[i], model.z[i]]), color="black")
+    pass
 
 # Display plot
 plt.show()
