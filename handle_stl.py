@@ -7,6 +7,37 @@ import numpy.linalg as linalg
 import matplotlib.pyplot as plt
 import time
 
+class FaceCollection:
+    def __init__(self):
+        self.faces = []
+        self.problem_faces = []
+        self.good_faces = []
+        self.iterator_pointer = 0
+    
+    def append(self, face):
+        if (isinstance(face, Face) is False):
+            raise TypeError('face argument needs to be of type Face()')
+        if face.has_bad_angle is True:
+            self.problem_faces.append(face)
+        else:
+            self.good_faces.append(face)
+        self.faces.append(face)
+    
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.iterator_pointer > (len(self.faces) - 1):
+            self.iterator_pointer = 0
+            raise StopIteration
+        else: 
+            self.iterator_pointer += 1
+            return self.faces[self.iterator_pointer - 1]
+    
+    def getWarningCount(self):
+        return len(self.problem_faces)
+
+
 class Face:
     def __init__(self, v1, v2, n):
         self.v1 = v1
@@ -29,7 +60,7 @@ def collect_faces(verticies, normals):
     Take all verticies and normals from the STL file and lump them into directional faces.
     '''
     # Get faces
-    faces = []
+    faces = FaceCollection()
     perp_tolerance = 0.001
     for r in range(0,len(verticies)):
         v1 = np.array(verticies[r][0]) - np.array(verticies[r][1])
@@ -64,11 +95,7 @@ model = mesh.Mesh.from_file('models/u_shape_45.stl')
 print_stl_information(model)
 # Set faces
 faces = collect_faces(model.vectors, model.normals)
-warning_count = 0
-for face in faces:
-    if face.has_bad_angle is True:
-        warning_count += 1
-print("%d warnings detected" % warning_count)
+print("%d warnings detected" % faces.getWarningCount())
 
 # Create new empty plot
 fig = plt.figure()
