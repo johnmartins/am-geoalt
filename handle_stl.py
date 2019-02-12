@@ -12,6 +12,11 @@ class FaceCollection:
         self.faces = []
         self.problem_faces = []
         self.good_faces = []
+
+        self.problem_verticies = []
+        self.good_verticies = []
+        self.verticies = []
+
         self.iterator_pointer = 0
     
     def append(self, face):
@@ -19,8 +24,12 @@ class FaceCollection:
             raise TypeError('face argument needs to be of type Face()')
         if face.has_bad_angle is True:
             self.problem_faces.append(face)
+            self.problem_verticies.append(face.get_verticies())
         else:
             self.good_faces.append(face)
+            self.good_verticies.append(face.get_verticies())
+
+        self.verticies.append(face.get_verticies())
         self.faces.append(face)
     
     def __iter__(self):
@@ -34,25 +43,45 @@ class FaceCollection:
             self.iterator_pointer += 1
             return self.faces[self.iterator_pointer - 1]
     
-    def getWarningCount(self):
+    def get_warning_count(self):
         return len(self.problem_faces)
+
+    def get_verticies(self, vtype="all"):
+        if vtype=="all":
+            return self.verticies
+        elif vtype=="bad":
+            return self.problem_verticies
+        elif vtype=="good":
+            return self.good_verticies
 
 
 class Face:
-    def __init__(self, v1, v2, n):
-        self.v1 = v1
-        self.v2 = v2
+    def __init__(self, vert1, vert2, vert3, n):
+        self.vert1 = vert1
+        self.vert2 = vert2
+        self.vert3 = vert3
+
+        self.v1 = None
+        self.v2 = None
+        self.__set_vectors__()
+
         self.n = n
         self.n_hat = n / linalg.norm(n)
         self.has_bad_angle = self.__check_for_problems__()
+
+    def __set_vectors__(self):
+        self.v1 = np.array(self.vert1) - np.array(self.vert2)
+        self.v2 = np.array(self.vert3) - np.array(self.vert2)
     
     def __check_for_problems__(self):
-        v1 = self.n_hat
-        v2 = [0,0,-1]
-        angle =  np.arccos(np.clip(np.dot(v1, v2), -1.0, 1.0))
+        neg_z_hat = [0,0,-1]
+        angle =  np.arccos(np.clip(np.dot(self.n_hat, neg_z_hat), -1.0, 1.0))
         if angle >= 0 and angle < np.pi/4:
             return True
         return False
+
+    def get_verticies(self):
+        return np.array([self.vert1, self.vert2, self.vert3])
 
 
 def collect_faces(verticies, normals):
@@ -76,7 +105,7 @@ def collect_faces(verticies, normals):
             print(res2)
             exit(1)
         
-        f = Face(v1, v2, n)
+        f = Face(np.array(verticies[r][0]), np.array(verticies[r][1]), np.array(verticies[r][2]), n)
         faces.append(f)
     return faces
 
@@ -90,26 +119,27 @@ def print_stl_information(model):
 
 
 # Load model
-model = mesh.Mesh.from_file('models/u_shape_45.stl')
+model = mesh.Mesh.from_file('models/hollow_square.stl')
 # Print info
 print_stl_information(model)
 # Set faces
 faces = collect_faces(model.vectors, model.normals)
-print("%d warnings detected" % faces.getWarningCount())
+print("%d warnings detected" % faces.get_warning_count())
 
 # Create new empty plot
 fig = plt.figure()
 axes = mplot3d.Axes3D(fig)
 
 # Add vectors from models to plot
-axes.add_collection3d(mplot3d.art3d.Poly3DCollection(model.vectors))
+axes.add_collection3d(mplot3d.art3d.Poly3DCollection(faces.get_verticies(vtype="good"), facecolors="g"))
+axes.add_collection3d(mplot3d.art3d.Poly3DCollection(faces.get_verticies(vtype="bad"), facecolors="r"))
 
 # Scale automatically
 scale = model.points.flatten(-1)
 axes.auto_scale_xyz(scale, scale, scale)
 
 # Plot points
-axes.scatter3D(model.x,model.y,model.z,color='red')
+axes.scatter3D(model.x,model.y,model.z,color='yellow')
 
 # Plot wireframe (does not show all edges)
 for i in range(0,len(model.vectors)):
