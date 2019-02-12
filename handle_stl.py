@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 import time
 
 class FaceCollection:
+    '''
+    Collection of Face objects
+    '''
     def __init__(self):
         self.faces = []
         self.problem_faces = []
@@ -56,7 +59,15 @@ class FaceCollection:
 
 
 class Face:
-    def __init__(self, vert1, vert2, vert3, n):
+    '''
+    STL polygon face
+    '''
+    def __init__(self, vert1, vert2, vert3, n, phi_min=np.pi/4):
+        '''
+        vert1, vert2, vert3: verticies of a polygon\n
+        n: normal vector\n
+        phi_min: minimum angular difference between normal vector and -z_hat before marked as a problematic surface
+        '''
         self.vert1 = vert1
         self.vert2 = vert2
         self.vert3 = vert3
@@ -67,16 +78,18 @@ class Face:
 
         self.n = n
         self.n_hat = n / linalg.norm(n)
-        self.has_bad_angle = self.__check_for_problems__()
+        self.phi_min = phi_min
+        self.has_bad_angle = self.check_for_problems(phi_min)
 
     def __set_vectors__(self):
         self.v1 = np.array(self.vert1) - np.array(self.vert2)
         self.v2 = np.array(self.vert3) - np.array(self.vert2)
     
-    def __check_for_problems__(self):
+    def check_for_problems(self, phi_min):
+        # Check the angle of the normal factor, and compare it to that of the inverted z-unit vector
         neg_z_hat = [0,0,-1]
-        angle =  np.arccos(np.clip(np.dot(self.n_hat, neg_z_hat), -1.0, 1.0))
-        if angle >= 0 and angle < np.pi/4:
+        angle = np.arccos(np.clip(np.dot(self.n_hat, neg_z_hat), -1.0, 1.0))
+        if angle >= 0 and angle < phi_min:
             return True
         return False
 
@@ -131,24 +144,24 @@ fig = plt.figure()
 axes = mplot3d.Axes3D(fig)
 
 # Add vectors from models to plot
-good_collection = mplot3d.art3d.Poly3DCollection(faces.get_verticies(vtype="good"), facecolors="g", linewidths=1)
+good_collection = mplot3d.art3d.Poly3DCollection(faces.get_verticies(vtype="good"))
 good_collection.set_edgecolor('black')
-axes.add_collection3d(good_collection)
-bad_collection = mplot3d.art3d.Poly3DCollection(faces.get_verticies(vtype="bad"), facecolors="r", linewidths=1)
+good_collection.set_facecolor('green')
+good_collection.set_alpha(0.2)
+
+bad_collection = mplot3d.art3d.Poly3DCollection(faces.get_verticies(vtype="bad"))
 bad_collection.set_edgecolor('black')
+bad_collection.set_facecolor('red')
+axes.add_collection3d(good_collection)
 axes.add_collection3d(bad_collection)
+
 
 # Scale automatically
 scale = model.points.flatten(-1)
 axes.auto_scale_xyz(scale, scale, scale)
 
 # Plot points
-axes.scatter3D(model.x,model.y,model.z,color='yellow')
-
-# Plot wireframe (does not show all edges)
-for i in range(0,len(model.vectors)):
-    #axes.plot_wireframe(np.array(model.x[i]), np.array(model.y[i]), np.array([model.z[i], model.z[i]]), color="black")
-    pass
+axes.scatter3D(model.x,model.y,model.z,color='yellow', s=1)
 
 # Display plot
 plt.show()
