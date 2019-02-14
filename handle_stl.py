@@ -62,7 +62,7 @@ class Face:
     '''
     STL polygon face
     '''
-    def __init__(self, vert1, vert2, vert3, n, phi_min=np.pi/4):
+    def __init__(self, vert1, vert2, vert3, n):
         '''
         vert1, vert2, vert3: verticies of a polygon\n
         n: normal vector\n
@@ -78,19 +78,25 @@ class Face:
 
         self.n = n
         self.n_hat = n / linalg.norm(n)
-        self.phi_min = phi_min
-        self.has_bad_angle = self.check_for_problems(phi_min)
+        self.has_bad_angle = self.check_for_problems()
 
     def __set_vectors__(self):
         self.v1 = np.array(self.vert1) - np.array(self.vert2)
         self.v2 = np.array(self.vert3) - np.array(self.vert2)
     
-    def check_for_problems(self, phi_min):
+    def check_for_problems(self, phi_min=np.pi/4, ignore_grounded=True):
+        '''
+        phi_min: Min angle before problem, in rads.
+        ignore_grounded: Ignore surfaces close to the floor (prone to visual buggs in python)
+        '''
         # Check the angle of the normal factor, and compare it to that of the inverted z-unit vector
         neg_z_hat = [0,0,-1]
         angle = np.arccos(np.clip(np.dot(self.n_hat, neg_z_hat), -1.0, 1.0))
         if angle >= 0 and angle < phi_min:
+            if self.vert1[2] < 0.01 and self.vert2[2] < 0.01 and self.vert3[2] < 0.01 and ignore_grounded is False:
+                return False
             return True
+
         return False
 
     def get_verticies(self):
@@ -132,7 +138,7 @@ def print_stl_information(model):
 
 
 # Load model
-model = mesh.Mesh.from_file('models/u_shape_arc.stl')
+model = mesh.Mesh.from_file('models/teapot.stl')
 # Print info
 print_stl_information(model)
 # Set faces
@@ -145,23 +151,23 @@ axes = mplot3d.Axes3D(fig)
 
 # Add vectors from models to plot
 good_collection = mplot3d.art3d.Poly3DCollection(faces.get_verticies(vtype="good"))
-good_collection.set_edgecolor('black')
+#good_collection.set_edgecolor('black') # Wireframe
 good_collection.set_facecolor('green')
 good_collection.set_alpha(0.2)
 
 bad_collection = mplot3d.art3d.Poly3DCollection(faces.get_verticies(vtype="bad"))
-bad_collection.set_edgecolor('black')
+#bad_collection.set_edgecolor('black') # Wireframe
 bad_collection.set_facecolor('red')
 axes.add_collection3d(good_collection)
 axes.add_collection3d(bad_collection)
 
 
 # Scale automatically
-scale = model.points.flatten(-1)
+scale = model.points.flatten('C')
 axes.auto_scale_xyz(scale, scale, scale)
 
 # Plot points
-axes.scatter3D(model.x,model.y,model.z,color='yellow', s=1)
+#axes.scatter3D(model.x,model.y,model.z,color='yellow', s=1) # plot verticies
 
 # Display plot
 plt.show()
