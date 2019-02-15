@@ -7,6 +7,34 @@ import numpy.linalg as linalg
 import matplotlib.pyplot as plt
 import time
 
+class VertexCollection:
+    '''
+    Collection of verticies. Can only contain one vertex per coordinate (no duplicates)
+    '''
+    def __init__(self):
+        pass
+
+    def add(self):
+        pass
+
+
+class Vertex:
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+    
+    @classmethod
+    def from_array(cls, array):
+        if len(array) != 3:
+            raise IndexError("The amount of elements can only be exactly 3 when using from_array method to create a Vertex")
+        (x, y, z) = array
+        return cls(x,y,z)
+
+    def __str__(self):
+        return "({}, {}, {})".format(self.x, self.y, self.z)
+
+
 class FaceCollection:
     '''
     Collection of Face objects
@@ -138,9 +166,15 @@ def print_stl_information(model):
 
 
 # Load model
-model = mesh.Mesh.from_file('models/teapot.stl')
+model = mesh.Mesh.from_file('models/cube.stl')
 # Print info
 print_stl_information(model)
+
+# Create vertex
+vert = Vertex.from_array([99, 23, 18])
+print(vert)
+
+
 # Set faces
 faces = collect_faces(model.vectors, model.normals)
 print("%d warnings detected" % faces.get_warning_count())
@@ -151,12 +185,12 @@ axes = mplot3d.Axes3D(fig)
 
 # Add vectors from models to plot
 good_collection = mplot3d.art3d.Poly3DCollection(faces.get_verticies(vtype="good"))
-#good_collection.set_edgecolor('black') # Wireframe
+good_collection.set_edgecolor('black') # Wireframe
 good_collection.set_facecolor('green')
 good_collection.set_alpha(0.2)
 
 bad_collection = mplot3d.art3d.Poly3DCollection(faces.get_verticies(vtype="bad"))
-#bad_collection.set_edgecolor('black') # Wireframe
+bad_collection.set_edgecolor('black') # Wireframe
 bad_collection.set_facecolor('red')
 axes.add_collection3d(good_collection)
 axes.add_collection3d(bad_collection)
