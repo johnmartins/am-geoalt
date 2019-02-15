@@ -7,15 +7,24 @@ import numpy.linalg as linalg
 import matplotlib.pyplot as plt
 import time
 
-class VertexCollection:
+class VertexCollection(set):
     '''
     Collection of verticies. Can only contain one vertex per coordinate (no duplicates)
     '''
     def __init__(self):
-        pass
+        self.x_vals = []
+        self.y_vals = []
+        self.z_vals = []
 
-    def add(self):
-        pass
+    def add(self, vertex):
+        len_before = len(self)
+        super().add(vertex)
+        len_after = len(self)
+        # Only append xyz-arrays if the object actualy was added to the set.
+        if (len_after > len_before):
+            self.x_vals.append(vertex.x)
+            self.y_vals.append(vertex.y)
+            self.z_vals.append(vertex.z)
 
 
 class Vertex:
@@ -32,7 +41,15 @@ class Vertex:
         return cls(x,y,z)
 
     def __str__(self):
-        return "({}, {}, {})".format(self.x, self.y, self.z)
+        return "VX({}, {}, {})".format(self.x, self.y, self.z)
+
+    def __eq__(self, other):
+        if self.x == other.x and self.y == other.y and self.z == other.z:
+            return True
+        return False
+
+    def __hash__(self):
+        return self.x + self.y + self.z # Not a great hash function
 
 
 class FaceCollection:
@@ -172,7 +189,27 @@ print_stl_information(model)
 
 # Create vertex
 vert = Vertex.from_array([99, 23, 18])
-print(vert)
+vert2 = Vertex.from_array([99, 23, 18])
+vert3 = Vertex.from_array([98, 23, 19])
+vert4 = Vertex.from_array([3, 11, 70])
+vert5 = Vertex.from_array([20, 50, 80])
+vert6 = Vertex.from_array([33, 44, 55])
+
+vertex_col = VertexCollection()
+vertex_col.add(vert)
+vertex_col.add(vert)
+vertex_col.add(vert2)
+vertex_col.add(vert3)
+vertex_col.add(vert4)
+vertex_col.add(vert5)
+vertex_col.add(vert6)
+print(vertex_col.x_vals)
+print(vertex_col.y_vals)
+print(vertex_col.z_vals)
+
+print(len(vertex_col))
+for cord in vertex_col:
+    print(cord)
 
 
 # Set faces
