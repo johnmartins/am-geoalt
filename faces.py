@@ -12,34 +12,38 @@ class FaceCollection:
         self.problem_faces = []
         self.good_faces = []
 
-        self.problem_verticies = []
-        self.good_verticies = []
-        self.verticies = []
         self.vertex_collection = VertexCollection()
 
         self.iterator_pointer = 0
     
     def append(self, face):
+        '''
+        Add face to face collection
+        '''
+
         if (isinstance(face, Face) is False):
             raise TypeError('face argument needs to be of type Face()')
         if face.has_bad_angle is True:
             self.problem_faces.append(face)
-            self.problem_verticies.append(face.get_verticies())
         else:
             self.good_faces.append(face)
-            self.good_verticies.append(face.get_verticies())
 
         self.vertex_collection.add(Vertex.from_array(face.get_verticies()[0]))
         self.vertex_collection.add(Vertex.from_array(face.get_verticies()[1]))
         self.vertex_collection.add(Vertex.from_array(face.get_verticies()[2]))
 
-        self.verticies.append(face.get_verticies())
         self.faces.append(face)
     
     def __iter__(self):
+        '''
+        Contributes to making this class iterable by providing an interface
+        '''
         return self
 
     def __next__(self):
+                '''
+        Contributes to making this class iterable by providing a pointer.
+        '''
         if self.iterator_pointer > (len(self.faces) - 1):
             self.iterator_pointer = 0
             raise StopIteration
@@ -48,15 +52,23 @@ class FaceCollection:
             return self.faces[self.iterator_pointer - 1]
     
     def get_warning_count(self):
+        '''
+        Returns the amount of potentially problematic faces
+        '''
         return len(self.problem_faces)
 
     def get_verticies(self, vtype="all"):
+        return_array = []
         if vtype=="all":
-            return self.verticies
+            for f in self.faces:
+                return_array.append(f.get_verticies())
         elif vtype=="bad":
-            return self.problem_verticies
+            for f in self.problem_faces:
+                return_array.append(f.get_verticies())
         elif vtype=="good":
-            return self.good_verticies
+            for f in self.good_faces:
+                return_array.append(f.get_verticies())
+        return return_array
 
     def get_vertex_collection(self):
         return self.vertex_collection
