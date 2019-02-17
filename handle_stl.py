@@ -156,6 +156,7 @@ def collect_faces(verticies, normals):
     faces = FaceCollection()
     perp_tolerance = 0.001
     for r in range(0,len(verticies)):
+        # Use verticies to calculate vectors. The vectors are then used to verify the normal vector.
         v1 = np.array(verticies[r][0]) - np.array(verticies[r][1])
         v2 = np.array(verticies[r][2]) - np.array(verticies[r][1])
         n = np.array(normals[r])
@@ -164,11 +165,9 @@ def collect_faces(verticies, normals):
 
         # Ensure that the vectors are perpendicular to the normal
         if (res1 > perp_tolerance or res2 > perp_tolerance):
-            print("WARNING! NON PERPENDICULAR NORMAL VECTOR:")
-            print(res1)
-            print(res2)
-            exit(1)
+            raise ValueError("Non perpendicular normal vector encountered in STL file.")
         
+        # Create new face, and append
         f = Face(np.array(verticies[r][0]), np.array(verticies[r][1]), np.array(verticies[r][2]), n)
         faces.append(f)
     return faces
