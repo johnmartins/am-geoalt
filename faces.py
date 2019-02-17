@@ -41,7 +41,7 @@ class FaceCollection:
         return self
 
     def __next__(self):
-                '''
+        '''
         Contributes to making this class iterable by providing a pointer.
         '''
         if self.iterator_pointer > (len(self.faces) - 1):
