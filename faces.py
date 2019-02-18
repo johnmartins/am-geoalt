@@ -28,9 +28,9 @@ class FaceCollection:
         else:
             self.good_faces.append(face)
 
-        face.vert1 = self.vertex_collection.add(face.vert1)
-        face.vert2 = self.vertex_collection.add(face.vert2)
-        face.vert3 = self.vertex_collection.add(face.vert3)
+        face.vertex1 = self.vertex_collection.add(face.vertex1)
+        face.vertex2 = self.vertex_collection.add(face.vertex2)
+        face.vertex3 = self.vertex_collection.add(face.vertex3)
 
         self.faces.append(face)
     
@@ -78,15 +78,15 @@ class Face:
     '''
     STL polygon face
     '''
-    def __init__(self, vert1, vert2, vert3, n):
+    def __init__(self, vertex1, vertex2, vertex3, n):
         '''
         vert1, vert2, vert3: verticies of a polygon\n
         n: normal vector\n
         phi_min: minimum angular difference between normal vector and -z_hat before marked as a problematic surface
         '''
-        self.vert1 = Vertex.from_array(vert1)
-        self.vert2 = Vertex.from_array(vert2)
-        self.vert3 = Vertex.from_array(vert3)
+        self.vertex1 = Vertex.from_array(vertex1)
+        self.vertex2 = Vertex.from_array(vertex2)
+        self.vertex3 = Vertex.from_array(vertex3)
 
         self.v1 = None
         self.v2 = None
@@ -97,8 +97,8 @@ class Face:
         self.has_bad_angle = self.check_for_problems()
 
     def __set_vectors__(self):
-        self.v1 = self.vert1.get_array() - self.vert2.get_array()
-        self.v2 = self.vert3.get_array() - self.vert2.get_array()
+        self.v1 = self.vertex1.get_array() - self.vertex2.get_array()
+        self.v2 = self.vertex3.get_array() - self.vertex2.get_array()
     
     def check_for_problems(self, phi_min=np.pi/4, ignore_grounded=True):
         '''
@@ -109,11 +109,11 @@ class Face:
         neg_z_hat = [0,0,-1]
         angle = np.arccos(np.clip(np.dot(self.n_hat, neg_z_hat), -1.0, 1.0))
         if angle >= 0 and angle < phi_min:
-            if self.vert1.get_array()[2] < 0.01 and self.vert2.get_array()[2] < 0.01 and self.vert3.get_array()[2] < 0.01 and ignore_grounded is False:
+            if self.vertex1.get_array()[2] < 0.01 and self.vertex2.get_array()[2] < 0.01 and self.vertex3.get_array()[2] < 0.01 and ignore_grounded is False:
                 return False
             return True
 
         return False
 
     def get_verticies(self):
-        return np.array([self.vert1.get_array(), self.vert2.get_array(), self.vert3.get_array()])
+        return np.array([self.vertex1.get_array(), self.vertex2.get_array(), self.vertex3.get_array()])

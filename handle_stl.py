@@ -6,7 +6,7 @@ import stl
 from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d import Axes3D
 from stl import mesh
-5
+
 from faces import *
 from verticies import *
 
@@ -54,6 +54,8 @@ print_stl_information(model)
 faces = collect_faces(model.vectors, model.normals)
 print("%d warnings detected" % faces.get_warning_count())
 print("%d unique verticies found" % len(faces.get_vertex_collection()))
+
+# Test editing geometry
 col_res = faces.get_vertex_collection().contains(Vertex.from_array([0,0,0]))
 col_res.z = 30
 col_res.x = -30
