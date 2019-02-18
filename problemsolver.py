@@ -47,9 +47,10 @@ def eliminate_angle(anchor_vertex, roaming_vertex, n_hat, phi_min=np.pi/4):
     while (angle >= 0 and angle < phi_min):
         roaming_vertex.set_array(roaming_vertex.get_array() + n_xy*0.02)
         vector = roaming_vertex.get_array() - anchor_vertex.get_array()
-        angle = np.arccos(np.clip(np.dot(neg_z_hat, vector), -1.0, 1.0))
+        vector_hat = vector / np.linalg.norm(vector)
+        angle = np.arccos(np.clip(np.dot(neg_z_hat, vector_hat), -1.0, 1.0))
         #print("angle = %d. vertex: %s" % ((angle*180/3.14), roaming_vertex.get_array()))
         k += 1
-        if k == 300:
+        if k == 1000:
+            #print("It didnt work out: %d" % angle)
             return
-        print("DONE!")

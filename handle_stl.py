@@ -6,9 +6,10 @@ import stl
 from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d import Axes3D
 from stl import mesh
+import queue
 
-from faces import *
-from verticies import *
+from faces import Face, FaceCollection
+from verticies import Vertex, VertexCollection
 from problemsolver import *
 
 def collect_faces(verticies, normals):
@@ -57,7 +58,13 @@ print("%d warnings detected" % faces.get_warning_count())
 print("%d unique verticies found" % len(faces.get_vertex_collection()))
 
 # Test editing geometry
+pq = queue.PriorityQueue()
 for face in faces:
+    pq.put(face)
+
+while not pq.empty():
+    face = pq.get()
+    print("Top z: %d" % face.top_z)
     if face.has_bad_angle is True:
         single_face_algorithm(face)
 

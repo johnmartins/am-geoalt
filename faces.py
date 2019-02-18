@@ -86,6 +86,7 @@ class Face:
         self.vertex1 = Vertex.from_array(vertex1)
         self.vertex2 = Vertex.from_array(vertex2)
         self.vertex3 = Vertex.from_array(vertex3)
+        self.top_z = self.__calc_top_z__()
 
         self.v1 = None
         self.v2 = None
@@ -94,6 +95,15 @@ class Face:
         self.n = n
         self.n_hat = n / np.linalg.norm(n)
         self.has_bad_angle, self.angle = self.check_for_problems()
+
+    def __calc_top_z__(self):
+        M = np.array([self.vertex1.get_array(), self.vertex2.get_array(), self.vertex3.get_array()])
+        z_array = M[:,2]
+        index_lowest_first = np.argsort(z_array)
+        topz = M[index_lowest_first[2],2]
+        print(topz)
+        return topz
+
 
     def __set_vectors__(self):
         self.v1 = self.vertex1.get_array() - self.vertex2.get_array()
@@ -116,3 +126,9 @@ class Face:
 
     def get_verticies(self):
         return np.array([self.vertex1.get_array(), self.vertex2.get_array(), self.vertex3.get_array()])
+
+    def __lt__(self, other):
+        if self.top_z > other.top_z:
+            return True
+        else: 
+            return False
