@@ -1,4 +1,4 @@
-import time
+from timeit import default_timer as timer
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -6,10 +6,9 @@ import stl
 from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d import Axes3D
 from stl import mesh
-
+5
 from faces import *
 from verticies import *
-
 
 def collect_faces(verticies, normals):
     '''
@@ -43,6 +42,8 @@ def print_stl_information(model):
     print("\tNormal count: %d" % len(model.normals))
     print("\tPoint count: %d" % len(model.points))
 
+# Start stopwatch
+time_start = timer()
 
 # Load model
 model = mesh.Mesh.from_file('models/cube.stl')
@@ -53,6 +54,17 @@ print_stl_information(model)
 faces = collect_faces(model.vectors, model.normals)
 print("%d warnings detected" % faces.get_warning_count())
 print("%d unique verticies found" % len(faces.get_vertex_collection()))
+col_res = faces.get_vertex_collection().contains(Vertex.from_array([0,0,0]))
+col_res.z = 30
+col_res.x = -30
+col_res.y = -30
+print(col_res)
+
+for vert in faces.get_verticies():
+    print(vert)
+
+# Stop first stopwatch
+time_problem_detection = timer()
 
 # Create new empty plot
 fig = plt.figure()
@@ -70,7 +82,6 @@ bad_collection.set_facecolor('red')
 axes.add_collection3d(good_collection)
 axes.add_collection3d(bad_collection)
 
-
 # Scale automatically
 scale = model.points.flatten('C')
 axes.auto_scale_xyz(scale, scale, scale)
@@ -78,7 +89,12 @@ axes.auto_scale_xyz(scale, scale, scale)
 # Plot points
 #axes.scatter3D(model.x,model.y,model.z,color='yellow', s=1) # plot verticies
 
+# Stop time to plot clock
+time_plot = timer()
+
 # Display plot
 plt.show()
 
-model.get
+print("\nPerformance:")
+print("Processed problem detection in %d seconds" % (time_problem_detection-time_start) )
+print("Processed graphics in %d seconds" % (time_plot-time_problem_detection))

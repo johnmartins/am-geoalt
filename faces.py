@@ -28,9 +28,9 @@ class FaceCollection:
         else:
             self.good_faces.append(face)
 
-        self.vertex_collection.add(Vertex.from_array(face.get_verticies()[0]))
-        self.vertex_collection.add(Vertex.from_array(face.get_verticies()[1]))
-        self.vertex_collection.add(Vertex.from_array(face.get_verticies()[2]))
+        face.vert1 = self.vertex_collection.add(face.vert1)
+        face.vert2 = self.vertex_collection.add(face.vert2)
+        face.vert3 = self.vertex_collection.add(face.vert3)
 
         self.faces.append(face)
     
