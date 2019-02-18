@@ -64,3 +64,6 @@ class Vertex:
 
     def get_array(self):
         return np.array([self.x, self.y, self.z])
+
+    def set_array(self, array):
+        self.x, self.y, self.z = array

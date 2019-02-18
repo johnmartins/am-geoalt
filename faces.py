@@ -1,5 +1,4 @@
 import numpy as np
-import numpy.linalg as linalg
 
 from verticies import *
 
@@ -93,8 +92,8 @@ class Face:
         self.__set_vectors__()
 
         self.n = n
-        self.n_hat = n / linalg.norm(n)
-        self.has_bad_angle = self.check_for_problems()
+        self.n_hat = n / np.linalg.norm(n)
+        self.has_bad_angle, self.angle = self.check_for_problems()
 
     def __set_vectors__(self):
         self.v1 = self.vertex1.get_array() - self.vertex2.get_array()
@@ -110,10 +109,10 @@ class Face:
         angle = np.arccos(np.clip(np.dot(self.n_hat, neg_z_hat), -1.0, 1.0))
         if angle >= 0 and angle < phi_min:
             if self.vertex1.get_array()[2] < 0.01 and self.vertex2.get_array()[2] < 0.01 and self.vertex3.get_array()[2] < 0.01 and ignore_grounded is False:
-                return False
-            return True
+                return False, angle
+            return True, angle
 
-        return False
+        return False, angle
 
     def get_verticies(self):
         return np.array([self.vertex1.get_array(), self.vertex2.get_array(), self.vertex3.get_array()])

@@ -9,6 +9,7 @@ from stl import mesh
 
 from faces import *
 from verticies import *
+from problemsolver import *
 
 def collect_faces(verticies, normals):
     '''
@@ -46,7 +47,7 @@ def print_stl_information(model):
 time_start = timer()
 
 # Load model
-model = mesh.Mesh.from_file('models/cube.stl')
+model = mesh.Mesh.from_file('models/u_shape_arc.stl')
 # Print info
 print_stl_information(model)
 
@@ -56,14 +57,9 @@ print("%d warnings detected" % faces.get_warning_count())
 print("%d unique verticies found" % len(faces.get_vertex_collection()))
 
 # Test editing geometry
-col_res = faces.get_vertex_collection().contains(Vertex.from_array([0,0,0]))
-col_res.z = 30
-col_res.x = -30
-col_res.y = -30
-print(col_res)
-
-for vert in faces.get_verticies():
-    print(vert)
+for face in faces:
+    if face.has_bad_angle is True:
+        single_face_algorithm(face)
 
 # Stop first stopwatch
 time_problem_detection = timer()
