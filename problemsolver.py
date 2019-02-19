@@ -47,9 +47,10 @@ def eliminate_angle(anchor_vertex, roaming_vertex, n_hat, phi_min=np.pi/4):
     n_xy_hat = n_xy / np.linalg.norm(n_xy)
     vector = roaming_vertex.get_array() - anchor_vertex.get_array()
     vector_xy = [vector[0] * n_xy_hat[0], vector[1] * n_xy_hat[1], 0]
-    vector_xy_abs = np.absolute(vector_xy)
+    vector_xy_abs = np.linalg.norm(vector_xy)
 
     # Calculate the difference between how long vector_xy is, and how long it should be
     abs_diff = vector_xy_abs - t_xy
+    print(abs_diff)
     # Add diff to close the gap.
     roaming_vertex.set_array(roaming_vertex.get_array() + n_xy_hat*abs_diff)

@@ -52,7 +52,7 @@ def plot_model(face_collection):
 
     # Add vectors from models to plot
     good_collection = mplot3d.art3d.Poly3DCollection(face_collection.get_verticies(vtype="good"))
-    #good_collection.set_edgecolor('black') # Wireframe
+    good_collection.set_edgecolor('black') # Wireframe
     good_collection.set_facecolor('green')
     good_collection.set_alpha(0.2)
 
@@ -76,7 +76,7 @@ def plot_model(face_collection):
 time_start = timer()
 
 # Load model
-model = mesh.Mesh.from_file('models/teapot.stl')
+model = mesh.Mesh.from_file('models/u_shape_arc.stl')
 # Print info
 print_stl_information(model)
 
@@ -86,20 +86,9 @@ print("%d warnings detected" % faces.get_warning_count())
 print("%d unique verticies found" % len(faces.get_vertex_collection()))
 
 # Test editing geometry
-iterations=6
+iterations=5
 
-pq = queue.PriorityQueue()
-for face in faces:
-    pq.put(face)
-
-while not pq.empty():
-    face = pq.get()
-    if face.has_bad_angle is True:
-        single_face_algorithm(face)
-
-for i in range(0, iterations-2):
-    faces.check_for_problems()
-
+for i in range(0, iterations):
     pq = queue.PriorityQueue()
     for face in faces:
         pq.put(face)
@@ -108,6 +97,8 @@ for i in range(0, iterations-2):
         face = pq.get()
         if face.has_bad_angle is True:
             single_face_algorithm(face)
+
+    faces.check_for_problems()
 
         
 # Stop first stopwatch
