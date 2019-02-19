@@ -72,6 +72,17 @@ class FaceCollection:
     def get_vertex_collection(self):
         return self.vertex_collection
 
+    def check_for_problems(self, phi_min=np.pi/4, ignore_grounded=True):
+        self.good_faces = []
+        self.problem_faces = []
+        for f in self.faces:
+            f.refresh_normal_vector()
+            has_bad_angle, angle = f.check_for_problems(phi_min=phi_min, ignore_grounded=ignore_grounded)
+            if has_bad_angle is True:
+                self.problem_faces.append(f)
+            else: 
+                self.good_faces.append(f)
+
 
 class Face:
     '''
@@ -94,6 +105,8 @@ class Face:
 
         self.n = n
         self.n_hat = n / np.linalg.norm(n)
+        self.has_bad_angle = None
+        self.angle = None
         self.has_bad_angle, self.angle = self.check_for_problems()
 
     def __calc_top_z__(self):
@@ -101,13 +114,18 @@ class Face:
         z_array = M[:,2]
         index_lowest_first = np.argsort(z_array)
         topz = M[index_lowest_first[2],2]
-        print(topz)
         return topz
 
 
     def __set_vectors__(self):
         self.v1 = self.vertex1.get_array() - self.vertex2.get_array()
         self.v2 = self.vertex3.get_array() - self.vertex2.get_array()
+
+    def refresh_normal_vector(self):
+        vector1 = self.vertex2.get_array() - self.vertex1.get_array()
+        vector2 = self.vertex3.get_array() - self.vertex1.get_array()
+        self.n = np.cross(vector1, vector2)
+        self.n_hat = self.n/np.linalg.norm(self.n)
     
     def check_for_problems(self, phi_min=np.pi/4, ignore_grounded=True):
         '''
@@ -117,11 +135,15 @@ class Face:
         # Check the angle of the normal factor, and compare it to that of the inverted z-unit vector
         neg_z_hat = [0,0,-1]
         angle = np.arccos(np.clip(np.dot(self.n_hat, neg_z_hat), -1.0, 1.0))
+        self.angle = angle
         if angle >= 0 and angle < phi_min:
             if self.vertex1.get_array()[2] < 0.01 and self.vertex2.get_array()[2] < 0.01 and self.vertex3.get_array()[2] < 0.01 and ignore_grounded is False:
+                self.has_bad_angle = False
                 return False, angle
+            self.has_bad_angle = True
             return True, angle
-
+        
+        self.has_bad_angle = False
         return False, angle
 
     def get_verticies(self):

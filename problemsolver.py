@@ -9,7 +9,6 @@ def single_face_algorithm(face, atype="additive"):
             raise TypeError('atype argument needs to be a string.')
 
     if atype=="additive":
-        print("Solving a problem with additive strategy:")
         # For additive algorithm type, find lowest point(s) push them in the xy-direction (away from normal) until the angle is ok.
         # Starts from the highest face and works its way down.
         vertex_matrix = np.array([face.vertex1.get_array(), face.vertex2.get_array(), face.vertex3.get_array()])
@@ -19,7 +18,6 @@ def single_face_algorithm(face, atype="additive"):
         # Check if plane is parallel to Z-plane.
         if z_cords[0] == z_cords[1] and z_cords[1] == z_cords[2]:
             # Come up with solution to this. Shrink towards middle, perhaps?
-            print("Encountered vector parallel to z-plane. Ignoring.")
             return
         
         # Calculate ratios of movement based on height. 
@@ -31,6 +29,8 @@ def single_face_algorithm(face, atype="additive"):
         eliminate_angle(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[0]], face.n_hat)
         eliminate_angle(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[1]], face.n_hat)
 
+        # After editing the vertexes the face normal vector needs to be updated.
+        face.refresh_normal_vector()
 
     else:
         raise TypeError("Non-supported algorithm type.")
@@ -40,9 +40,6 @@ def eliminate_angle(anchor_vertex, roaming_vertex, n_hat, phi_min=np.pi/4):
     # Make sure that the anchor is above the roaming vertex in the Z-axis
     if (delta_z <= 0):
         return
-
-    print("Identified anchor: %s" % anchor_vertex)
-    print("Identified roamer: %s" % roaming_vertex)
 
     tan_phi = math.tan(phi_min)
     t_xy = delta_z/tan_phi
