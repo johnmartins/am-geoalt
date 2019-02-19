@@ -1,4 +1,5 @@
 from timeit import default_timer as timer
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -44,6 +45,33 @@ def print_stl_information(model):
     print("\tNormal count: %d" % len(model.normals))
     print("\tPoint count: %d" % len(model.points))
 
+def plot_model(face_collection):
+    # Create new empty plot
+    fig = plt.figure()
+    axes = mplot3d.Axes3D(fig)
+
+    # Add vectors from models to plot
+    good_collection = mplot3d.art3d.Poly3DCollection(face_collection.get_verticies(vtype="all"))
+    good_collection.set_edgecolor('black') # Wireframe
+    good_collection.set_facecolor('green')
+    good_collection.set_alpha(0.2)
+
+    bad_collection = mplot3d.art3d.Poly3DCollection(face_collection.get_verticies(vtype="bad"))
+    bad_collection.set_edgecolor('black') # Wireframe
+    bad_collection.set_facecolor('red')
+    axes.add_collection3d(good_collection)
+    #axes.add_collection3d(bad_collection)
+
+    # Scale automatically
+    scale = model.points.flatten('C')
+    axes.auto_scale_xyz(scale, scale, scale)
+
+    # Plot points
+    #axes.scatter3D(model.x,model.y,model.z,color='yellow', s=1) # plot verticies
+
+    # Display plot
+    plt.show()
+
 # Start stopwatch
 time_start = timer()
 
@@ -64,42 +92,13 @@ for face in faces:
 
 while not pq.empty():
     face = pq.get()
-    print("Top z: %d" % face.top_z)
     if face.has_bad_angle is True:
         single_face_algorithm(face)
-
+        
 # Stop first stopwatch
 time_problem_detection = timer()
 
-# Create new empty plot
-fig = plt.figure()
-axes = mplot3d.Axes3D(fig)
-
-# Add vectors from models to plot
-good_collection = mplot3d.art3d.Poly3DCollection(faces.get_verticies(vtype="good"))
-good_collection.set_edgecolor('black') # Wireframe
-good_collection.set_facecolor('green')
-good_collection.set_alpha(0.2)
-
-bad_collection = mplot3d.art3d.Poly3DCollection(faces.get_verticies(vtype="bad"))
-bad_collection.set_edgecolor('black') # Wireframe
-bad_collection.set_facecolor('red')
-axes.add_collection3d(good_collection)
-axes.add_collection3d(bad_collection)
-
-# Scale automatically
-scale = model.points.flatten('C')
-axes.auto_scale_xyz(scale, scale, scale)
-
-# Plot points
-#axes.scatter3D(model.x,model.y,model.z,color='yellow', s=1) # plot verticies
-
-# Stop time to plot clock
-time_plot = timer()
-
-# Display plot
-plt.show()
+plot_model(faces)
 
 print("\nPerformance:")
 print("Processed problem detection in %d seconds" % (time_problem_detection-time_start) )
-print("Processed graphics in %d seconds" % (time_plot-time_problem_detection))

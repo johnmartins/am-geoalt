@@ -1,5 +1,6 @@
 from faces import *
 import numpy as np
+import math
 
 def single_face_algorithm(face, atype="additive"):
     if (isinstance(face, Face) is False):
@@ -18,6 +19,7 @@ def single_face_algorithm(face, atype="additive"):
         # Check if plane is parallel to Z-plane.
         if z_cords[0] == z_cords[1] and z_cords[1] == z_cords[2]:
             # Come up with solution to this. Shrink towards middle, perhaps?
+            print("Encountered vector parallel to z-plane. Ignoring.")
             return
         
         # Calculate ratios of movement based on height. 
@@ -34,23 +36,23 @@ def single_face_algorithm(face, atype="additive"):
         raise TypeError("Non-supported algorithm type.")
 
 def eliminate_angle(anchor_vertex, roaming_vertex, n_hat, phi_min=np.pi/4):
-    print("balls")
+    delta_z = anchor_vertex.z - roaming_vertex.z
+    # Make sure that the anchor is above the roaming vertex in the Z-axis
+    if (delta_z <= 0):
+        return
 
-    neg_z_hat = [0,0,-1]
+    print("Identified anchor: %s" % anchor_vertex)
+    print("Identified roamer: %s" % roaming_vertex)
 
+    tan_phi = math.tan(phi_min)
+    t_xy = delta_z/tan_phi
     n_xy = np.array([n_hat[0], n_hat[1], 0])
+    n_xy_hat = n_xy / np.linalg.norm(n_xy)
     vector = roaming_vertex.get_array() - anchor_vertex.get_array()
-    angle = np.arccos(np.clip(np.dot(neg_z_hat, vector), -1.0, 1.0))
-    print(angle*180/3.14)
+    vector_xy = [vector[0] * n_xy_hat[0], vector[1] * n_xy_hat[1], 0]
+    vector_xy_abs = np.absolute(vector_xy)
 
-    k = 0
-    while (angle >= 0 and angle < phi_min):
-        roaming_vertex.set_array(roaming_vertex.get_array() + n_xy*0.02)
-        vector = roaming_vertex.get_array() - anchor_vertex.get_array()
-        vector_hat = vector / np.linalg.norm(vector)
-        angle = np.arccos(np.clip(np.dot(neg_z_hat, vector_hat), -1.0, 1.0))
-        #print("angle = %d. vertex: %s" % ((angle*180/3.14), roaming_vertex.get_array()))
-        k += 1
-        if k == 1000:
-            #print("It didnt work out: %d" % angle)
-            return
+    # Calculate the difference between how long vector_xy is, and how long it should be
+    abs_diff = vector_xy_abs - t_xy
+    # Add diff to close the gap.
+    roaming_vertex.set_array(roaming_vertex.get_array() + n_xy_hat*abs_diff)
