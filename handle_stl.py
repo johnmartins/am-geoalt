@@ -76,7 +76,7 @@ def plot_model(face_collection):
 time_start = timer()
 
 # Load model
-model = mesh.Mesh.from_file('models/clip.stl')
+model = mesh.Mesh.from_file('models/u_shape_arc.stl')
 # Print info
 print_stl_information(model)
 
@@ -85,8 +85,11 @@ faces = collect_faces(model.vectors, model.normals)
 print("%d warnings detected" % faces.get_warning_count())
 print("%d unique verticies found" % len(faces.get_vertex_collection()))
 
+# Stop first stopwatch
+time_problem_detection = timer()
+
 # Test editing geometry
-iterations=10
+iterations=20
 
 for i in range(0, iterations):
     pq = queue.PriorityQueue()
@@ -106,9 +109,12 @@ for i in range(0, iterations):
 
         
 # Stop first stopwatch
-time_problem_detection = timer()
-
-plot_model(faces)
+time_error_correction = timer()
 
 print("\nPerformance:")
 print("Processed problem detection in %d seconds" % (time_problem_detection-time_start) )
+print("Processed %d iterations of error correction in %d seconds" % (iterations, time_error_correction))
+
+plot_model(faces)
+
+
