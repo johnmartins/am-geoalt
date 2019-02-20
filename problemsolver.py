@@ -11,6 +11,7 @@ def single_face_algorithm(face, atype="additive"):
     if atype=="additive":
         # For additive algorithm type, find lowest point(s) push them in the xy-direction (away from normal) until the angle is ok.
         # Starts from the highest face and works its way down.
+        # Gather all verticies, and fetch all z-coordinates
         vertex_matrix = np.array([face.vertex1.get_array(), face.vertex2.get_array(), face.vertex3.get_array()])
         vertex_list = [face.vertex1, face.vertex2, face.vertex3]
         z_cords = vertex_matrix[:,2]
@@ -51,6 +52,5 @@ def eliminate_angle(anchor_vertex, roaming_vertex, n_hat, phi_min=np.pi/4):
 
     # Calculate the difference between how long vector_xy is, and how long it should be
     abs_diff = vector_xy_abs - t_xy
-    print(abs_diff)
     # Add diff to close the gap.
     roaming_vertex.set_array(roaming_vertex.get_array() + n_xy_hat*abs_diff)
