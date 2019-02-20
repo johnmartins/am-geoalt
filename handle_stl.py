@@ -66,7 +66,7 @@ def plot_model(face_collection):
     axes.auto_scale_xyz(scale, scale, scale)
 
     # Plot points
-    #axes.scatter3D(model.x,model.y,model.z,color='yellow', s=1) # plot verticies
+    axes.scatter3D(model.x,model.y,model.z,color='yellow', s=1) # plot verticies
 
     # Display plot
     plt.show()
@@ -75,7 +75,7 @@ def plot_model(face_collection):
 time_start = timer()
 
 # Load model
-model = mesh.Mesh.from_file('models/u_shape_arc.stl')
+model = mesh.Mesh.from_file('models/sphere2.stl')
 # Print info
 print_stl_information(model)
 
@@ -112,7 +112,7 @@ time_error_correction = timer()
 
 print("\nPerformance:")
 print("Processed problem detection in %d seconds" % (time_problem_detection-time_start) )
-print("Processed %d iterations of error correction in %d seconds" % (iterations, time_error_correction))
+print("Processed %d iterations of error correction in %d seconds" % (iterations, time_error_correction-time_problem_detection))
 
 plot_model(faces)
 
