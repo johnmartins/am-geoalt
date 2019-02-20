@@ -54,7 +54,6 @@ def plot_model(face_collection):
     good_collection = mplot3d.art3d.Poly3DCollection(face_collection.get_verticies(vtype="good"))
     good_collection.set_edgecolor('black') # Wireframe
     good_collection.set_facecolor('green')
-    good_collection.set_alpha(0.2)
 
     bad_collection = mplot3d.art3d.Poly3DCollection(face_collection.get_verticies(vtype="bad"))
     bad_collection.set_edgecolor('black') # Wireframe
