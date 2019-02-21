@@ -66,21 +66,39 @@ def plot_model(face_collection):
     axes.auto_scale_xyz(scale, scale, scale)
 
     # Plot points
-    axes.scatter3D(model.x,model.y,model.z,color='yellow', s=1) # plot verticies
+    #axes.scatter3D(model.x,model.y,model.z,color='yellow', s=1) # plot verticies
 
     # Display plot
     plt.show()
+
+# Some settings
+ignore_ground = True    # Setting this to False results in rendering issues when using matplotlib 3d plotting.
+ground_tolerance = 0.01
+
+# Parameters
+ground_level=0
 
 # Start stopwatch
 time_start = timer()
 
 # Load model
-model = mesh.Mesh.from_file('models/sphere2.stl')
+model = mesh.Mesh.from_file('models/cylinder.stl')
+
+# Extract lowest Z to use as ground level (if ignore_ground is set to False).
+if ignore_ground is False:
+    Z=[]
+    for polygon in model.vectors:
+        for vector in polygon:
+            Z.append(vector[2])
+    ground_level = min(Z)
+    print("Ground level identified as Z = %d" % ground_level)
+
 # Print info
 print_stl_information(model)
 
 # Set faces
 faces = collect_faces(model.vectors, model.normals)
+faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance)
 print("%d warnings detected" % faces.get_warning_count())
 print("%d unique verticies found" % len(faces.get_vertex_collection()))
 
@@ -88,7 +106,7 @@ print("%d unique verticies found" % len(faces.get_vertex_collection()))
 time_problem_detection = timer()
 
 # Test editing geometry
-iterations=20
+iterations=5
 
 for i in range(0, iterations):
     pq = queue.PriorityQueue()
@@ -104,7 +122,7 @@ for i in range(0, iterations):
         face = pq.get()
         single_face_algorithm(face)
 
-    faces.check_for_problems()
+    faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance)
 
         
 # Stop first stopwatch

@@ -72,12 +72,12 @@ class FaceCollection:
     def get_vertex_collection(self):
         return self.vertex_collection
 
-    def check_for_problems(self, phi_min=np.pi/4, ignore_grounded=True):
+    def check_for_problems(self, phi_min=np.pi/4, ignore_grounded=False, ground_level=0, ground_tolerance=0.01):
         self.good_faces = []
         self.problem_faces = []
         for f in self.faces:
             f.refresh_normal_vector()
-            has_bad_angle, angle = f.check_for_problems(phi_min=phi_min, ignore_grounded=ignore_grounded)
+            has_bad_angle, angle = f.check_for_problems(phi_min=phi_min, ignore_grounded=ignore_grounded, ground_level=ground_level, ground_tolerance=ground_tolerance)
             if has_bad_angle is True:
                 self.problem_faces.append(f)
             else: 
@@ -107,7 +107,14 @@ class Face:
         self.n_hat = n / np.linalg.norm(n)
         self.has_bad_angle = None
         self.angle = None
-        self.has_bad_angle, self.angle = self.check_for_problems()
+
+    def __connect_verticies__(self):
+        '''
+        Connect all verticies to each other
+        '''
+        self.vertex1.set_adjacency(self.vertex2)
+        self.vertex1.set_adjacency(self.vertex3)
+        self.vertex2.set_adjacency(self.vertex3)
 
     def __calc_top_z__(self):
         M = np.array([self.vertex1.get_array(), self.vertex2.get_array(), self.vertex3.get_array()])
@@ -115,7 +122,6 @@ class Face:
         index_lowest_first = np.argsort(z_array)
         topz = M[index_lowest_first[2],2]
         return topz
-
 
     def __set_vectors__(self):
         self.v1 = self.vertex1.get_array() - self.vertex2.get_array()
@@ -127,7 +133,7 @@ class Face:
         self.n = np.cross(vector1, vector2)
         self.n_hat = self.n/np.linalg.norm(self.n)
     
-    def check_for_problems(self, phi_min=np.pi/4, ignore_grounded=True):
+    def check_for_problems(self, phi_min=np.pi/4, ignore_grounded=False, ground_level=0, ground_tolerance = 0.01):
         '''
         phi_min: Min angle before problem, in rads.
         ignore_grounded: Ignore surfaces close to the floor (prone to visual buggs in python)
@@ -136,10 +142,15 @@ class Face:
         neg_z_hat = [0,0,-1]
         angle = np.arccos(np.clip(np.dot(self.n_hat, neg_z_hat), -1.0, 1.0))
         self.angle = angle
+
+        # Check if angle is within problem threshold
         if angle >= 0 and angle < phi_min:
-            if self.vertex1.get_array()[2] < 0.01 and self.vertex2.get_array()[2] < 0.01 and self.vertex3.get_array()[2] < 0.01 and ignore_grounded is False:
+
+            # Check if grounded
+            if self.check_grounded(ground_level, ground_tolerance) is True and ignore_grounded is False:
                 self.has_bad_angle = False
                 return False, angle
+            
             self.has_bad_angle = True
             return True, angle
         
@@ -154,3 +165,19 @@ class Face:
             return True
         else: 
             return False
+
+    def check_grounded(self, ground_level, ground_tolerance):
+        '''
+        Check if this surface is parallel to the ground.
+        '''
+        # Calculate differences between individual vertex Z-elements, and the ground level.
+        diff_1 = np.abs(self.vertex1.get_array()[2] - ground_level)
+        diff_2 = np.abs(self.vertex2.get_array()[2] - ground_level)
+        diff_3 = np.abs(self.vertex3.get_array()[2] - ground_level)
+
+        # If any of the ground levels is above the threshold, then return false, else return true.
+        if diff_1 > ground_tolerance or diff_2 > ground_tolerance or diff_3 > ground_tolerance:
+            return False
+        
+        return True
+        

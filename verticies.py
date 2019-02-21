@@ -43,6 +43,7 @@ class Vertex:
         self.x = x
         self.y = y
         self.z = z
+        self.adjacencies = set()
     
     @classmethod
     def from_array(cls, array):
@@ -63,7 +64,17 @@ class Vertex:
         return int(round(self.x + self.y + self.z)) # Not a great hash function. Should use a prime number, and modulus
 
     def get_array(self):
+        '''
+        Returns the vertex as a coordinate vector in the form of a numpy array
+        '''
         return np.array([self.x, self.y, self.z])
 
     def set_array(self, array):
+        '''
+        Set the coordinate value of the vertex using a R^3 array
+        '''
         self.x, self.y, self.z = array
+
+    def set_adjacency(self, vertex):
+        self.adjacencies.add(vertex)
+        vertex.adjacencies.add(self)
