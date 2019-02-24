@@ -21,12 +21,10 @@ def single_face_algorithm(face, atype="additive"):
             # Come up with solution to this. Shrink towards middle, perhaps?
             return
         
-        # Calculate ratios of movement based on height. 
-        # Lowest point should not move at all. 
-        # Higher points should move further the higher up they are
-        # Movements should be towards the XY-gradient
+        # We only want to move the bottom two verticies, so we sort them. The vertex highest from the ground will be used as an "anchor", while the other two will be pushed
         index_lowest_first = np.argsort(z_cords)
 
+        # Notice that the n_hat (normal vector) is NOT updated in between the edits, as doing so would cause the second edit to move in the wrong direction.
         eliminate_angle(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[0]], face.n_hat)
         eliminate_angle(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[1]], face.n_hat)
 

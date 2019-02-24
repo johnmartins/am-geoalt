@@ -49,6 +49,9 @@ def plot_model(face_collection):
     # Create new empty plot
     fig = plt.figure()
     axes = mplot3d.Axes3D(fig)
+    axes.set_xlabel("X axis")
+    axes.set_ylabel("Y axis")
+    axes.set_zlabel("Z axis")
 
     # Add vectors from models to plot
     good_collection = mplot3d.art3d.Poly3DCollection(face_collection.get_verticies(vtype="good"))
@@ -105,7 +108,7 @@ print("%d unique verticies found" % len(faces.get_vertex_collection()))
 # Stop first stopwatch
 time_problem_detection = timer()
 
-# Test editing geometry
+# Edit geometry
 iterations=5
 
 for i in range(0, iterations):
@@ -124,7 +127,6 @@ for i in range(0, iterations):
 
     faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance)
 
-        
 # Stop first stopwatch
 time_error_correction = timer()
 
@@ -133,5 +135,3 @@ print("Processed problem detection in %d seconds" % (time_problem_detection-time
 print("Processed %d iterations of error correction in %d seconds" % (iterations, time_error_correction-time_problem_detection))
 
 plot_model(faces)
-
-
