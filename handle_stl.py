@@ -87,7 +87,7 @@ ground_level=0
 time_start = timer()
 
 # Load model
-model = mesh.Mesh.from_file('models/architecture.stl')
+model = mesh.Mesh.from_file('models/cylinder.stl')
 
 # Extract lowest Z to use as ground level (if ignore_ground is set to False).
 if ignore_ground is False:
@@ -133,6 +133,10 @@ for i in range(0, iterations):
             continue
 
     faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance)
+    
+    # Calculate completion percentage
+    percent = i/iterations * 100
+    print("%d%% done" % percent)
 
 # Stop first stopwatch
 time_error_correction = timer()
@@ -140,5 +144,6 @@ time_error_correction = timer()
 print("\nPerformance:")
 print("Processed problem detection in %d seconds" % (time_problem_detection-time_start) )
 print("Processed %d iterations of error correction in %d seconds" % (iterations, time_error_correction-time_problem_detection))
+print("Done!")
 
 plot_model(faces)

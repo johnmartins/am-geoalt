@@ -184,6 +184,5 @@ class Face:
 
     def calculate_normal_vector(self):
         n = np.cross((self.vertex2.get_array() - self.vertex1.get_array()),(self.vertex3.get_array() - self.vertex2.get_array()))
-        print("Calculated normal vector: %s" % n)
         return n/np.linalg.norm(n)
         
