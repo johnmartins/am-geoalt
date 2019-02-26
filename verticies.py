@@ -44,6 +44,7 @@ class Vertex:
         self.y = y
         self.z = z
         self.adjacencies = set()
+        self.change_set = []
     
     @classmethod
     def from_array(cls, array):
@@ -78,3 +79,22 @@ class Vertex:
     def set_adjacency(self, vertex):
         self.adjacencies.add(vertex)
         vertex.adjacencies.add(self)
+
+    def add_change_partial(self, vector):
+        self.change_set.append(vector)
+    
+    def reset_change_set(self):
+        self.change_set = []
+
+    def perform_change(self):
+        if len(self.change_set) == 0:
+            return
+        net_vector = np.array([0,0,0])
+        for v in self.change_set:
+            net_vector = net_vector + v
+
+        net_vector_mean = net_vector/len(self.change_set)
+        
+        self.set_array(self.get_array() + net_vector_mean)
+        self.reset_change_set()
+        return net_vector_mean

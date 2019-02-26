@@ -105,6 +105,7 @@ class Face:
 
         self.n = n
         self.n_hat = n / np.linalg.norm(n)
+        self.n_hat_original = self.calculate_normal_vector()
         self.has_bad_angle = None
         self.angle = None
 
@@ -180,4 +181,9 @@ class Face:
             return False
         
         return True
+
+    def calculate_normal_vector(self):
+        n = np.cross((self.vertex2.get_array() - self.vertex1.get_array()),(self.vertex3.get_array() - self.vertex2.get_array()))
+        print("Calculated normal vector: %s" % n)
+        return n/np.linalg.norm(n)
         

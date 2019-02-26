@@ -25,8 +25,8 @@ def single_face_algorithm(face, atype="additive"):
         index_lowest_first = np.argsort(z_cords)
 
         # Notice that the n_hat (normal vector) is NOT updated in between the edits, as doing so would cause the second edit to move in the wrong direction.
-        eliminate_angle(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[0]], face.n_hat)
-        eliminate_angle(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[1]], face.n_hat)
+        eliminate_angle(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[0]], face.n_hat_original)
+        eliminate_angle(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[1]], face.n_hat_original)
 
         # After editing the vertexes the face normal vector needs to be updated.
         face.refresh_normal_vector()
@@ -37,7 +37,7 @@ def single_face_algorithm(face, atype="additive"):
 def eliminate_angle(anchor_vertex, roaming_vertex, n_hat, phi_min=np.pi/4):
     delta_z = anchor_vertex.z - roaming_vertex.z
     # Make sure that the anchor is above the roaming vertex in the Z-axis
-    if (delta_z <= 0):
+    if (delta_z <= 0 or delta_z < 0.01):
         return
 
     tan_phi = math.tan(phi_min)
@@ -45,10 +45,11 @@ def eliminate_angle(anchor_vertex, roaming_vertex, n_hat, phi_min=np.pi/4):
     n_xy = np.array([n_hat[0], n_hat[1], 0])
     n_xy_hat = n_xy / np.linalg.norm(n_xy)
     vector = roaming_vertex.get_array() - anchor_vertex.get_array()
-    vector_xy = [vector[0] * n_xy_hat[0], vector[1] * n_xy_hat[1], 0]
+    
+    vector_xy = np.dot(vector, n_xy_hat) 
     vector_xy_abs = np.linalg.norm(vector_xy)
 
     # Calculate the difference between how long vector_xy is, and how long it should be
     abs_diff = vector_xy_abs - t_xy
     # Add diff to close the gap.
-    roaming_vertex.set_array(roaming_vertex.get_array() + n_xy_hat*abs_diff)
+    roaming_vertex.add_change_partial(n_xy_hat*abs_diff)

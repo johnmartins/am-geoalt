@@ -30,7 +30,9 @@ def collect_faces(verticies, normals):
 
         # Ensure that the vectors are perpendicular to the normal
         if (res1 > perp_tolerance or res2 > perp_tolerance):
-            raise ValueError("Non perpendicular normal vector encountered in STL file.")
+            print("Warning! Non-perpendicular normal vector encountered in STL file.")
+            print("diff1: %f, diff2: %f" % (res1, res2))
+            #raise ValueError("Non perpendicular normal vector encountered in STL file.")
         
         # Create new face, and append
         f = Face(np.array(verticies[r][0]), np.array(verticies[r][1]), np.array(verticies[r][2]), n)
@@ -54,7 +56,7 @@ def plot_model(face_collection):
     axes.set_zlabel("Z axis")
 
     # Add vectors from models to plot
-    good_collection = mplot3d.art3d.Poly3DCollection(face_collection.get_verticies(vtype="good"))
+    good_collection = mplot3d.art3d.Poly3DCollection(face_collection.get_verticies(vtype="all"))
     good_collection.set_edgecolor('black') # Wireframe
     good_collection.set_facecolor('green')
 
@@ -62,7 +64,7 @@ def plot_model(face_collection):
     bad_collection.set_edgecolor('black') # Wireframe
     bad_collection.set_facecolor('red')
     axes.add_collection3d(good_collection)
-    axes.add_collection3d(bad_collection)
+    #axes.add_collection3d(bad_collection)
 
     # Scale automatically
     scale = model.points.flatten('C')
@@ -75,7 +77,7 @@ def plot_model(face_collection):
     plt.show()
 
 # Some settings
-ignore_ground = True    # Setting this to False results in rendering issues when using matplotlib 3d plotting.
+ignore_ground = False    # Setting this to False results in rendering issues when using matplotlib 3d plotting.
 ground_tolerance = 0.01
 
 # Parameters
@@ -85,7 +87,7 @@ ground_level=0
 time_start = timer()
 
 # Load model
-model = mesh.Mesh.from_file('models/cylinder.stl')
+model = mesh.Mesh.from_file('models/architecture.stl')
 
 # Extract lowest Z to use as ground level (if ignore_ground is set to False).
 if ignore_ground is False:
@@ -109,7 +111,7 @@ print("%d unique verticies found" % len(faces.get_vertex_collection()))
 time_problem_detection = timer()
 
 # Edit geometry
-iterations=5
+iterations=10
 
 for i in range(0, iterations):
     pq = queue.PriorityQueue()
@@ -124,6 +126,11 @@ for i in range(0, iterations):
     while not pq.empty():
         face = pq.get()
         single_face_algorithm(face)
+
+    for vertex in faces.get_vertex_collection():
+        net_vector = vertex.perform_change()
+        if net_vector is None:
+            continue
 
     faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance)
 
