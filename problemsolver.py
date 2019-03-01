@@ -40,16 +40,22 @@ def eliminate_angle(anchor_vertex, roaming_vertex, n_hat, phi_min=np.pi/4):
     if (delta_z <= 0 or delta_z < 0.01):
         return
 
+    # tan(phi)
     tan_phi = math.tan(phi_min)
+    # Calculate how far in the xy plane the roaming vertex SHOULD be from the anchor point in order to satisfy this face
     t_xy = delta_z/tan_phi
+    # Extract the XY coordinates of the normal vector of this face
     n_xy = np.array([n_hat[0], n_hat[1], 0])
+    # Get the unit vector of the XY compartment of the normal vector of this face
     n_xy_hat = n_xy / np.linalg.norm(n_xy)
+    # Create a vector from the anchor point to the roaming point
     vector = roaming_vertex.get_array() - anchor_vertex.get_array()
-    
+    # Get the distance in the XY-plane between the anchor point and the roaming point
     vector_xy = np.dot(vector, n_xy_hat) 
+    # Get the absolute value of that distance
     vector_xy_abs = np.linalg.norm(vector_xy)
 
-    # Calculate the difference between how long vector_xy is, and how long it should be
+    # Calculate the difference between how far the distance between the roaming vertex and the anchor vertex is and how long it should be.
     abs_diff = vector_xy_abs - t_xy
     # Add diff to close the gap.
     roaming_vertex.add_change_partial(n_xy_hat*abs_diff)

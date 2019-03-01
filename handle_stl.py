@@ -87,7 +87,7 @@ ground_level=0
 time_start = timer()
 
 # Load model
-model = mesh.Mesh.from_file('models/cylinder.stl')
+model = mesh.Mesh.from_file('models/architecture.stl')
 
 # Extract lowest Z to use as ground level (if ignore_ground is set to False).
 if ignore_ground is False:
@@ -111,7 +111,9 @@ print("%d unique verticies found" % len(faces.get_vertex_collection()))
 time_problem_detection = timer()
 
 # Edit geometry
-iterations=10
+iterations=15
+
+print("Error correction process initiated..")
 
 for i in range(0, iterations):
     pq = queue.PriorityQueue()
