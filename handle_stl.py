@@ -79,8 +79,10 @@ def plot_model(face_collection):
 # Some settings
 phi_min=np.pi/4
 ignore_ground = False       # Setting this to False results in rendering issues when using matplotlib 3d plotting.
+convergence_break = True    # Stops the problem solving algorithm loop after the amount of warnings hasn't changed for 3 iterations.
 ground_tolerance = 0.01     # How close a vertex needs to be to the ground in order to be considered to be touching it.
 angle_tolerance=0.017       # How close an angle needs to be to phi_min in order to be considered to be acceptable.
+max_iterations=2000         # The maximum amount of iterations before the problem correction algorithm stops.
 
 # Parameters
 ground_level=0
@@ -112,12 +114,11 @@ print("%d unique verticies found" % len(faces.get_vertex_collection()))
 # Stop first stopwatch
 time_problem_detection = timer()
 
-# Edit geometry
-iterations=15
-
 print("Error correction process initiated..")
-
-for i in range(0, iterations):
+iterations = 0
+previous_warning_count = [0,0,0]
+for i in range(0, max_iterations):
+    iterations = i + 1
     pq = queue.PriorityQueue()
     for face in faces:
         if face.has_bad_angle is True:
@@ -139,8 +140,17 @@ for i in range(0, iterations):
     faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
     
     # Calculate completion percentage
-    percent = i/iterations * 100
+    percent = i/max_iterations * 100
     print("Iteration %d: %d%% done. Approximate warnings detected: %d" % (i+1, percent, faces.get_warning_count()))
+
+    # Check if the amount of warnings has converged towards a value. If so, then break.
+    if convergence_break is True:
+        previous_warning_count[0] = previous_warning_count[1]
+        previous_warning_count[1] = previous_warning_count[2]
+        previous_warning_count[2] = faces.get_warning_count() 
+        if max(previous_warning_count) == min(previous_warning_count):
+            print("Warning count convergence detected. Breaking.")
+            break
 
 # Stop first stopwatch
 time_error_correction = timer()
