@@ -79,7 +79,8 @@ def plot_model(face_collection):
 # Some settings
 phi_min=np.pi/4
 ignore_ground = False       # Setting this to False results in rendering issues when using matplotlib 3d plotting.
-convergence_break = True    # Stops the problem solving algorithm loop after the amount of warnings hasn't changed for 3 iterations.
+convergence_break = True    # Stops the problem solving algorithm loop after the amount of warnings hasn't changed for n iterations.
+convergence_depth = 5       # How many iterations that needs to be the same before it counts as convergence.
 ground_tolerance = 0.01     # How close a vertex needs to be to the ground in order to be considered to be touching it.
 angle_tolerance=0.017       # How close an angle needs to be to phi_min in order to be considered to be acceptable.
 max_iterations=2000         # The maximum amount of iterations before the problem correction algorithm stops.
@@ -114,9 +115,9 @@ print("%d unique verticies found" % len(faces.get_vertex_collection()))
 # Stop first stopwatch
 time_problem_detection = timer()
 
-print("Error correction process initiated..")
+print("\nProblem correction process initiated. phi_min = %f \t Max iterations: %d. Convergence detection activated: %s. Convergence depth: %d" % (phi_min, max_iterations, convergence_break, convergence_depth))
 iterations = 0
-previous_warning_count = [0,0,0]
+previous_warning_count = []
 for i in range(0, max_iterations):
     iterations = i + 1
     pq = queue.PriorityQueue()
@@ -140,15 +141,13 @@ for i in range(0, max_iterations):
     faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
     
     # Calculate completion percentage
-    percent = i/max_iterations * 100
-    print("Iteration %d: %d%% done. Approximate warnings detected: %d" % (i+1, percent, faces.get_warning_count()))
+    print("Iteration (%d/%d):\t Approximate warnings detected: %d" % (i+1, max_iterations, faces.get_warning_count()))
 
     # Check if the amount of warnings has converged towards a value. If so, then break.
     if convergence_break is True:
-        previous_warning_count[0] = previous_warning_count[1]
-        previous_warning_count[1] = previous_warning_count[2]
-        previous_warning_count[2] = faces.get_warning_count() 
-        if max(previous_warning_count) == min(previous_warning_count):
+        previous_warning_count.append(faces.get_warning_count())
+        final_elements = previous_warning_count[len(previous_warning_count)-convergence_depth:] 
+        if max(final_elements) == min(final_elements) and len(previous_warning_count) > convergence_depth:
             print("Warning count convergence detected. Breaking.")
             break
 
