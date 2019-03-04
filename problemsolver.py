@@ -2,7 +2,7 @@ from faces import *
 import numpy as np
 import math
 
-def single_face_algorithm(face, atype="additive"):
+def single_face_algorithm(face, atype="additive", phi_min=np.pi/4):
     if (isinstance(face, Face) is False):
             raise TypeError('face argument needs to be of type Face().')
     if (isinstance(atype, str) is False):
@@ -25,8 +25,8 @@ def single_face_algorithm(face, atype="additive"):
         index_lowest_first = np.argsort(z_cords)
 
         # Notice that the n_hat (normal vector) is NOT updated in between the edits, as doing so would cause the second edit to move in the wrong direction.
-        eliminate_angle(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[0]], face.n_hat_original)
-        eliminate_angle(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[1]], face.n_hat_original)
+        eliminate_angle(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[0]], face.n_hat_original, phi_min=phi_min)
+        eliminate_angle(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[1]], face.n_hat_original, phi_min=phi_min)
 
         # After editing the vertexes the face normal vector needs to be updated.
         face.refresh_normal_vector()

@@ -79,6 +79,7 @@ def plot_model(face_collection):
 # Some settings
 ignore_ground = False    # Setting this to False results in rendering issues when using matplotlib 3d plotting.
 ground_tolerance = 0.01
+phi_min=np.pi/4
 
 # Parameters
 ground_level=0
@@ -103,7 +104,7 @@ print_stl_information(model)
 
 # Set faces
 faces = collect_faces(model.vectors, model.normals)
-faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance)
+faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min)
 print("%d warnings detected" % faces.get_warning_count())
 print("%d unique verticies found" % len(faces.get_vertex_collection()))
 
@@ -127,14 +128,14 @@ for i in range(0, iterations):
 
     while not pq.empty():
         face = pq.get()
-        single_face_algorithm(face)
+        single_face_algorithm(face, atype="additive", phi_min=phi_min)
 
     for vertex in faces.get_vertex_collection():
         net_vector = vertex.perform_change()
         if net_vector is None:
             continue
 
-    faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance)
+    faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min)
     
     # Calculate completion percentage
     percent = i/iterations * 100
