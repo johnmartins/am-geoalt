@@ -56,7 +56,7 @@ def plot_model(face_collection):
     axes.set_zlabel("Z axis")
 
     # Add vectors from models to plot
-    good_collection = mplot3d.art3d.Poly3DCollection(face_collection.get_verticies(vtype="good"))
+    good_collection = mplot3d.art3d.Poly3DCollection(face_collection.get_verticies(vtype="all"))
     good_collection.set_edgecolor('black') # Wireframe
     good_collection.set_facecolor('green')
 
@@ -64,7 +64,7 @@ def plot_model(face_collection):
     bad_collection.set_edgecolor('black') # Wireframe
     bad_collection.set_facecolor('red')
     axes.add_collection3d(good_collection)
-    axes.add_collection3d(bad_collection)
+    #axes.add_collection3d(bad_collection)
 
     # Scale automatically
     scale = model.points.flatten('C')
@@ -77,9 +77,10 @@ def plot_model(face_collection):
     plt.show()
 
 # Some settings
-ignore_ground = False    # Setting this to False results in rendering issues when using matplotlib 3d plotting.
-ground_tolerance = 0.01
 phi_min=np.pi/4
+ignore_ground = False       # Setting this to False results in rendering issues when using matplotlib 3d plotting.
+ground_tolerance = 0.01     # How close a vertex needs to be to the ground in order to be considered to be touching it.
+angle_tolerance=0.017       # How close an angle needs to be to phi_min in order to be considered to be acceptable.
 
 # Parameters
 ground_level=0
@@ -104,7 +105,7 @@ print_stl_information(model)
 
 # Set faces
 faces = collect_faces(model.vectors, model.normals)
-faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min)
+faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
 print("%d warnings detected" % faces.get_warning_count())
 print("%d unique verticies found" % len(faces.get_vertex_collection()))
 
@@ -135,7 +136,7 @@ for i in range(0, iterations):
         if net_vector is None:
             continue
 
-    faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min)
+    faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
     
     # Calculate completion percentage
     percent = i/iterations * 100

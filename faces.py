@@ -72,12 +72,12 @@ class FaceCollection:
     def get_vertex_collection(self):
         return self.vertex_collection
 
-    def check_for_problems(self, phi_min=np.pi/4, ignore_grounded=False, ground_level=0, ground_tolerance=0.01):
+    def check_for_problems(self, phi_min=np.pi/4, ignore_grounded=False, ground_level=0, ground_tolerance=0.01, angle_tolerance=0.017):
         self.good_faces = []
         self.problem_faces = []
         for f in self.faces:
             f.refresh_normal_vector()
-            has_bad_angle, angle = f.check_for_problems(phi_min=phi_min, ignore_grounded=ignore_grounded, ground_level=ground_level, ground_tolerance=ground_tolerance)
+            has_bad_angle, angle = f.check_for_problems(phi_min=phi_min, ignore_grounded=ignore_grounded, ground_level=ground_level, ground_tolerance=ground_tolerance, angle_tolerance=angle_tolerance)
             if has_bad_angle is True:
                 self.problem_faces.append(f)
             else: 
@@ -134,10 +134,18 @@ class Face:
         self.n = np.cross(vector1, vector2)
         self.n_hat = self.n/np.linalg.norm(self.n)
     
-    def check_for_problems(self, phi_min=np.pi/4, ignore_grounded=False, ground_level=0, ground_tolerance = 0.01):
+    def check_for_problems(self, phi_min=np.pi/4, ignore_grounded=False, ground_level=0, ground_tolerance = 0.01, angle_tolerance = 0.017):
         '''
-        phi_min: Min angle before problem, in rads.
-        ignore_grounded: Ignore surfaces close to the floor (prone to visual buggs in python)
+        phi_min: Min angle before problem, in rads.\n
+
+        ignore_grounded: Ignore surfaces close to the floor (prone to visual buggs in python)\n
+
+        ground_level: The z-index of the ground\n
+
+        ground_tolerance: How close a vertex needs to be to the ground in order to be considered as touching it.\n
+
+        angle_tolerance: How close to the phi_min an angle needs to be in order to be considered as acceptable. 
+        Setting this to 0 causes the problem correction process to take much more time.\n
         '''
         # Check the angle of the normal factor, and compare it to that of the inverted z-unit vector
         neg_z_hat = [0,0,-1]
@@ -151,10 +159,17 @@ class Face:
             if self.check_grounded(ground_level, ground_tolerance) is True and ignore_grounded is False:
                 self.has_bad_angle = False
                 return False, angle
+
+            # Check if inside tolerence
+            if np.abs(angle - phi_min) < angle_tolerance:
+                self.has_bad_angle = False
+                return False, angle
             
+            # If the angle is bad, and it is not on the ground, and is outside of tolerances, then mark it as a bad angle.
             self.has_bad_angle = True
             return True, angle
         
+        # The angle is outside of the problem threshold and should thus be marked as an accepted angle.
         self.has_bad_angle = False
         return False, angle
 
