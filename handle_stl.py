@@ -152,11 +152,11 @@ for i in range(0, max_iterations):
             break
 
 # Stop first stopwatch
-time_error_correction = timer()
+time_problem_correction = timer()
 
 print("\nPerformance:")
 print("Processed problem detection in %d seconds" % (time_problem_detection-time_start) )
-print("Processed %d iterations of error correction in %d seconds" % (iterations, time_error_correction-time_problem_detection))
+print("Processed %d iterations of problem correction in %d seconds" % (iterations, time_problem_correction-time_problem_detection))
 print("Done!")
 
 plot_model(faces)
