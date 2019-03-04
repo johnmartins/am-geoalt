@@ -56,7 +56,7 @@ def plot_model(face_collection):
     axes.set_zlabel("Z axis")
 
     # Add vectors from models to plot
-    good_collection = mplot3d.art3d.Poly3DCollection(face_collection.get_verticies(vtype="all"))
+    good_collection = mplot3d.art3d.Poly3DCollection(face_collection.get_verticies(vtype="good"))
     good_collection.set_edgecolor('black') # Wireframe
     good_collection.set_facecolor('green')
 
@@ -64,7 +64,7 @@ def plot_model(face_collection):
     bad_collection.set_edgecolor('black') # Wireframe
     bad_collection.set_facecolor('red')
     axes.add_collection3d(good_collection)
-    #axes.add_collection3d(bad_collection)
+    axes.add_collection3d(bad_collection)
 
     # Scale automatically
     scale = model.points.flatten('C')
@@ -139,7 +139,7 @@ for i in range(0, iterations):
     
     # Calculate completion percentage
     percent = i/iterations * 100
-    print("%d%% done" % percent)
+    print("Iteration %d: %d%% done. Approximate warnings detected: %d" % (i+1, percent, faces.get_warning_count()))
 
 # Stop first stopwatch
 time_error_correction = timer()
