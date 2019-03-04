@@ -25,6 +25,7 @@ def single_face_algorithm(face, atype="additive", phi_min=np.pi/4):
         index_lowest_first = np.argsort(z_cords)
 
         # Notice that the n_hat (normal vector) is NOT updated in between the edits, as doing so would cause the second edit to move in the wrong direction.
+        # Instead, we use the original normal vector in order to maintain the original shape of the model.
         eliminate_angle(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[0]], face.n_hat_original, phi_min=phi_min)
         eliminate_angle(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[1]], face.n_hat_original, phi_min=phi_min)
 
@@ -52,8 +53,8 @@ def eliminate_angle(anchor_vertex, roaming_vertex, n_hat, phi_min=np.pi/4):
     vector = roaming_vertex.get_array() - anchor_vertex.get_array()
     # Get the distance in the XY-plane between the anchor point and the roaming point
     vector_xy = np.dot(vector, n_xy_hat) 
-    # Get the absolute value of that distance
-    vector_xy_abs = np.linalg.norm(vector_xy)
+    # Change the sign in order to get the correct direction of change
+    vector_xy_abs = -vector_xy
 
     # Calculate the difference between how far the distance between the roaming vertex and the anchor vertex is and how long it should be.
     abs_diff = vector_xy_abs - t_xy
