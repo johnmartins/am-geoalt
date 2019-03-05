@@ -11,7 +11,7 @@ import queue
 
 from faces import Face, FaceCollection
 from verticies import Vertex, VertexCollection
-from problemsolver import *
+from problemsolver import single_face_algorithm
 
 def collect_faces(verticies, normals):
     '''
@@ -76,7 +76,7 @@ def plot_model(face_collection):
     # Display plot
     plt.show()
 
-# Some settings
+# Settings
 phi_min=np.pi/4
 ignore_ground = False       # Setting this to False results in rendering issues when using matplotlib 3d plotting.
 convergence_break = True    # Stops the problem solving algorithm loop after the amount of warnings hasn't changed for n iterations.
