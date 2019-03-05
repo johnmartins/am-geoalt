@@ -12,6 +12,7 @@ import queue
 from faces import Face, FaceCollection
 from verticies import Vertex, VertexCollection
 from problemsolver import single_face_algorithm
+from stl_creator import STLCreator
 
 def collect_faces(verticies, normals):
     '''
@@ -92,7 +93,7 @@ ground_level=0
 time_start = timer()
 
 # Load model
-model = mesh.Mesh.from_file('models/architecture.stl')
+model = mesh.Mesh.from_file('fixed_models/file.stl')
 
 # Extract lowest Z to use as ground level (if ignore_ground is set to False).
 if ignore_ground is False:
@@ -159,4 +160,6 @@ print("Processed problem detection in %d seconds" % (time_problem_detection-time
 print("Processed %d iterations of problem correction in %d seconds" % (iterations, time_problem_correction-time_problem_detection))
 print("Done!")
 
+stl_creator = STLCreator('./fixed_models/file.stl', faces)
+stl_creator.build_file()
 plot_model(faces)
