@@ -26,8 +26,8 @@ def single_face_algorithm(face, atype="additive", phi_min=np.pi/4):
 
         # Notice that the n_hat (normal vector) is NOT updated in between the edits, as doing so would cause the second edit to move in the wrong direction.
         # Instead, we use the original normal vector in order to maintain the original shape of the model.
-        eliminate_angle(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[0]], face.n_hat_original, phi_min=phi_min)
-        eliminate_angle(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[1]], face.n_hat_original, phi_min=phi_min)
+        fix_angle_by_adding(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[0]], face.n_hat_original, phi_min=phi_min)
+        fix_angle_by_adding(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[1]], face.n_hat_original, phi_min=phi_min)
 
         # After editing the vertexes the face normal vector needs to be updated.
         face.refresh_normal_vector()
@@ -35,7 +35,7 @@ def single_face_algorithm(face, atype="additive", phi_min=np.pi/4):
     else:
         raise TypeError("Non-supported algorithm type.")
 
-def eliminate_angle(anchor_vertex, roaming_vertex, n_hat, phi_min=np.pi/4):    
+def fix_angle_by_adding(anchor_vertex, roaming_vertex, n_hat, phi_min=np.pi/4):    
     delta_z = anchor_vertex.z - roaming_vertex.z
     # Make sure that the anchor is above the roaming vertex in the Z-axis
     if (delta_z <= 0 or delta_z < 0.01):
@@ -60,3 +60,15 @@ def eliminate_angle(anchor_vertex, roaming_vertex, n_hat, phi_min=np.pi/4):
     abs_diff = vector_xy_abs - t_xy
     # Add diff to close the gap.
     roaming_vertex.add_change_partial(n_xy_hat*abs_diff)
+
+def introduce_angle(face):
+    '''
+    This method is used to introduce an angle to an otherwise 0 angle plane
+    '''    
+    pass
+
+def move_towards_mass_centrum(face):
+    '''
+    This method takes the vertecies of a face and moves them towards the middle of the face.
+    '''
+    pass
