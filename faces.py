@@ -1,6 +1,6 @@
 import numpy as np
 
-from verticies import *
+from verticies import Vertex, VertexCollection
 
 class FaceCollection:
     '''
@@ -60,13 +60,13 @@ class FaceCollection:
         return_array = []
         if vtype=="all":
             for f in self.faces:
-                return_array.append(f.get_verticies())
+                return_array.append(f.get_verticies_as_arrays())
         elif vtype=="bad":
             for f in self.problem_faces:
-                return_array.append(f.get_verticies())
+                return_array.append(f.get_verticies_as_arrays())
         elif vtype=="good":
             for f in self.good_faces:
-                return_array.append(f.get_verticies())
+                return_array.append(f.get_verticies_as_arrays())
         return return_array
 
     def get_vertex_collection(self):
@@ -96,18 +96,14 @@ class Face:
         '''
         self.vertex1 = Vertex.from_array(vertex1)
         self.vertex2 = Vertex.from_array(vertex2)
-        self.vertex3 = Vertex.from_array(vertex3)
-        self.top_z = self.__calc_top_z__()
+        self.vertex3 = Vertex.from_array(vertex3)   
+        self.top_z = self.__calc_top_z__()          # The highest Z coordinate
 
-        self.v1 = None
-        self.v2 = None
-        self.__set_vectors__()
-
-        self.n = n
-        self.n_hat = n / np.linalg.norm(n)
-        self.n_hat_original = self.calculate_normal_vector()
-        self.has_bad_angle = None
-        self.angle = None
+        self.n = n                                  # The normal vector
+        self.n_hat = n / np.linalg.norm(n)          # Normalized normal vector (unit vector)
+        self.n_hat_original = self.calculate_normal_vector()    # The original normalized normal vector from when the model was loaded the first time
+        self.has_bad_angle = None                   # True if this face has a problematic angle
+        self.angle = None                           # The angle compared to the xy-plane
 
     def __connect_verticies__(self):
         '''
@@ -123,10 +119,6 @@ class Face:
         index_lowest_first = np.argsort(z_array)
         topz = M[index_lowest_first[2],2]
         return topz
-
-    def __set_vectors__(self):
-        self.v1 = self.vertex1.get_array() - self.vertex2.get_array()
-        self.v2 = self.vertex3.get_array() - self.vertex2.get_array()
 
     def refresh_normal_vector(self):
         vector1 = self.vertex2.get_array() - self.vertex1.get_array()
@@ -173,8 +165,11 @@ class Face:
         self.has_bad_angle = False
         return False, angle
 
-    def get_verticies(self):
+    def get_verticies_as_arrays(self):
         return np.array([self.vertex1.get_array(), self.vertex2.get_array(), self.vertex3.get_array()])
+
+    def get_verticies(self):
+        return [self.vertex1, self.vertex2, self.vertex3]
 
     def __lt__(self, other):
         if self.top_z > other.top_z:

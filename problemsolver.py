@@ -1,4 +1,4 @@
-from faces import *
+from faces import Face
 import numpy as np
 import math
 
@@ -35,7 +35,7 @@ def single_face_algorithm(face, atype="additive", phi_min=np.pi/4):
     else:
         raise TypeError("Non-supported algorithm type.")
 
-def eliminate_angle(anchor_vertex, roaming_vertex, n_hat, phi_min=np.pi/4):
+def eliminate_angle(anchor_vertex, roaming_vertex, n_hat, phi_min=np.pi/4):    
     delta_z = anchor_vertex.z - roaming_vertex.z
     # Make sure that the anchor is above the roaming vertex in the Z-axis
     if (delta_z <= 0 or delta_z < 0.01):
