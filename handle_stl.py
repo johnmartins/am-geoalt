@@ -8,10 +8,13 @@ from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d import Axes3D
 from stl import mesh
 import queue
+import ntpath
+import os
 
 from faces import Face, FaceCollection
 from verticies import Vertex, VertexCollection
 from problemsolver import single_face_algorithm
+from stl_creator import STLCreator
 
 def collect_faces(verticies, normals):
     '''
@@ -76,8 +79,20 @@ def plot_model(face_collection):
     # Display plot
     plt.show()
 
+def check_paths(model_path, target_path):
+    model_exists = os.path.exists(model_path)
+    target_exists = os.path.exists(target_path)
+
+    if (model_exists is False):
+        raise IOError("Selected model does not exist")
+
+    if (target_exists is True):
+        raise IOError("Target path for altered model already exists. Please change it.")
+
 # Settings
-phi_min=np.pi/4
+model_path = 'models/architecture.stl'
+altered_model_path = 'fixed_models/architecture7.stl'
+phi_min=np.pi/4             # Smallest allowed angle of overhang
 ignore_ground = False       # Setting this to False results in rendering issues when using matplotlib 3d plotting.
 convergence_break = True    # Stops the problem solving algorithm loop after the amount of warnings hasn't changed for n iterations.
 convergence_depth = 5       # How many iterations that needs to be the same before it counts as convergence.
@@ -85,16 +100,17 @@ ground_tolerance = 0.01     # How close a vertex needs to be to the ground in or
 angle_tolerance=0.017       # How close an angle needs to be to phi_min in order to be considered to be acceptable.
 max_iterations=2000         # The maximum amount of iterations before the problem correction algorithm stops.
 
-# Parameters
-ground_level=0
+# Check if model exists
+check_paths(model_path, altered_model_path)
 
 # Start stopwatch
 time_start = timer()
 
 # Load model
-model = mesh.Mesh.from_file('models/architecture.stl')
+model = mesh.Mesh.from_file(model_path)
 
 # Extract lowest Z to use as ground level (if ignore_ground is set to False).
+ground_level=0
 if ignore_ground is False:
     Z=[]
     for polygon in model.vectors:
@@ -105,14 +121,13 @@ if ignore_ground is False:
 
 # Print info
 print_stl_information(model)
+time_model_info = timer()
 
 # Set faces
 faces = collect_faces(model.vectors, model.normals)
 faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
 print("%d warnings detected" % faces.get_warning_count())
 print("%d unique verticies found" % len(faces.get_vertex_collection()))
-
-# Stop first stopwatch
 time_problem_detection = timer()
 
 print("\nProblem correction process initiated. phi_min = %f \t Max iterations: %d. Convergence detection activated: %s. Convergence depth: %d" % (phi_min, max_iterations, convergence_break, convergence_depth))
@@ -154,9 +169,18 @@ for i in range(0, max_iterations):
 # Stop first stopwatch
 time_problem_correction = timer()
 
+# Save changes to a new STL file
+print("Saving changes to a new STL-file..")
+stl_creator = STLCreator(altered_model_path, faces)
+stl_creator.build_file()
+time_stl_creation = timer()
+
 print("\nPerformance:")
-print("Processed problem detection in %d seconds" % (time_problem_detection-time_start) )
-print("Processed %d iterations of problem correction in %d seconds" % (iterations, time_problem_correction-time_problem_detection))
-print("Done!")
+print("Loaded model information in %.2f seconds" % (time_model_info-time_start))
+print("Processed problem detection in %.2f seconds" % (time_problem_detection-time_model_info))
+print("Processed %d iterations of problem correction in %.2f seconds" % (iterations, time_problem_correction-time_problem_detection))
+print("Created a new STL file in %.2f seconds" % (time_stl_creation-time_problem_correction))
+
+print("\nDone!")
 
 plot_model(faces)
