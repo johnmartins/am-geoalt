@@ -35,11 +35,18 @@ class STLCreator:
             print("File aready exists.")
 
     def __close_file__(self):
+        if self.stream is None:
+            print("No file is opened. Terminating closing process.")
+            
         self.stream.write("endsolid GeoAlt\n")
         self.stream.close()
         self.stream = None
     
     def __parse_face_collection__(self):
+        if self.stream is None:
+            print("No file is opened. Terminating parsing process.")
+            return
+
         for face in self.face_collection:
             face.refresh_normal_vector()
             self.stream.write("\tfacet normal %f %f %f\n" % (face.n[0], face.n[1], face.n[2]))            
