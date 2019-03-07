@@ -91,7 +91,7 @@ def check_paths(model_path, target_path):
 
 # Settings
 model_path = 'models/architecture.stl'
-altered_model_path = 'fixed_models/architecture7.stl'
+altered_model_path = 'fixed_models/architecture.stl'
 phi_min=np.pi/4             # Smallest allowed angle of overhang
 ignore_ground = False       # Setting this to False results in rendering issues when using matplotlib 3d plotting.
 convergence_break = True    # Stops the problem solving algorithm loop after the amount of warnings hasn't changed for n iterations.

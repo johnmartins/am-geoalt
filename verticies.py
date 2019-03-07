@@ -62,7 +62,8 @@ class Vertex:
         return False
 
     def __hash__(self):
-        return int(round(self.x + self.y + self.z)) # Not a great hash function. Should use a prime number, and modulus
+        h = hash(self.x+self.y+self.z)
+        return h
 
     def get_array(self):
         '''
