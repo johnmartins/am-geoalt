@@ -50,14 +50,12 @@ def fix_angle_by_adding(anchor_vertex, roaming_vertex, n_hat, phi_min=np.pi/4):
     # Get the unit vector of the XY compartment of the normal vector of this face
     n_xy_hat = n_xy / np.linalg.norm(n_xy)
     # Create a vector from the anchor point to the roaming point
-    vector = roaming_vertex.get_array() - anchor_vertex.get_array()
+    vector = anchor_vertex.get_array() - roaming_vertex.get_array()
     # Get the distance in the XY-plane between the anchor point and the roaming point
     vector_xy = np.dot(vector, n_xy_hat) 
-    # Change the sign in order to get the correct direction of change
-    vector_xy_abs = -vector_xy
 
     # Calculate the difference between how far the distance between the roaming vertex and the anchor vertex is and how long it should be.
-    abs_diff = vector_xy_abs - t_xy
+    abs_diff = vector_xy - t_xy
     # Add diff to close the gap.
     roaming_vertex.add_change_partial(n_xy_hat*abs_diff)
 
