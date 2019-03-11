@@ -125,6 +125,11 @@ time_model_info = timer()
 
 # Set faces
 faces = collect_faces(model.vectors, model.normals)
+
+for v in faces.get_vertex_collection():
+    if v.is_pole is True:
+        print("Pole found")
+
 faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
 print("%d warnings detected" % faces.get_warning_count())
 print("%d unique verticies found" % len(faces.get_vertex_collection()))

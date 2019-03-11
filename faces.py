@@ -27,9 +27,15 @@ class FaceCollection:
         else:
             self.good_faces.append(face)
 
+        # This is where it is ensured using OOP that there only exists one instance of each unique vertex
         face.vertex1 = self.vertex_collection.add(face.vertex1)
         face.vertex2 = self.vertex_collection.add(face.vertex2)
         face.vertex3 = self.vertex_collection.add(face.vertex3)
+
+        # This is where pole detection needs to happen
+        face.vertex1.set_adjacency(face.vertex2)
+        face.vertex1.set_adjacency(face.vertex3)
+        face.vertex2.set_adjacency(face.vertex3)
 
         self.faces.append(face)
     
