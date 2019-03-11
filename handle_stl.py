@@ -90,7 +90,7 @@ def check_paths(model_path, target_path):
         raise IOError("Target path for altered model already exists. Please change it.")
 
 # Settings
-model_path = 'models/architecture.stl'
+model_path = 'fixed_models/architecture.stl'
 altered_model_path = 'fixed_models/architecture.stl'
 phi_min=np.pi/4             # Smallest allowed angle of overhang
 ignore_ground = False       # Setting this to False results in rendering issues when using matplotlib 3d plotting.
@@ -125,10 +125,6 @@ time_model_info = timer()
 
 # Set faces
 faces = collect_faces(model.vectors, model.normals)
-
-for v in faces.get_vertex_collection():
-    if v.is_pole is True:
-        print("Pole found")
 
 faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
 print("%d warnings detected" % faces.get_warning_count())

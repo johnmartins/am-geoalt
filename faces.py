@@ -32,7 +32,7 @@ class FaceCollection:
         face.vertex2 = self.vertex_collection.add(face.vertex2)
         face.vertex3 = self.vertex_collection.add(face.vertex3)
 
-        # This is where pole detection needs to happen
+        # Each unique vertex is marked as adjacent to the other vertices in the face.
         face.vertex1.set_adjacency(face.vertex2)
         face.vertex1.set_adjacency(face.vertex3)
         face.vertex2.set_adjacency(face.vertex3)
