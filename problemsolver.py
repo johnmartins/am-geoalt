@@ -11,6 +11,10 @@ def single_face_algorithm(face, atype="additive", phi_min=np.pi/4):
     if atype=="additive":
         # For additive algorithm type, find lowest point(s) push them in the xy-direction (away from normal) until the angle is ok.
         # Starts from the highest face and works its way down.
+
+        # Check if either vertex is a "pole". If it is, solve it
+        check_and_correct_poles(face)
+
         # Gather all verticies, and fetch all z-coordinates
         vertex_matrix = np.array([face.vertex1.get_array(), face.vertex2.get_array(), face.vertex3.get_array()])
         vertex_list = [face.vertex1, face.vertex2, face.vertex3]
@@ -70,3 +74,23 @@ def move_towards_mass_centrum(face):
     This method takes the vertecies of a face and moves them towards the middle of the face.
     '''
     pass
+
+def check_and_correct_poles(face):
+    '''
+    Checks if a face contains a pole vertex, and then seeks to equalize all Z-indicies if such a pole is found.
+    '''
+    if face.vertex1.is_pole:
+        equalize_z_index(face.vertex1, face.vertex2, face.vertex3)
+    elif face.vertex2.is_pole:
+        equalize_z_index(face.vertex2, face.vertex1, face.vertex3)
+    elif face.vertex3.is_pole:
+        equalize_z_index(face.vertex3, face.vertex2, face.vertex1)
+    return
+        
+def equalize_z_index(target_vertex, vertex1, vertex2):
+    '''
+    Sets the Z-coordinate of vertex1 and vertex2 to be the same as that of the target_vertex.
+    '''
+    vertex1.z = target_vertex.z
+    vertex2.z = target_vertex.z
+    return
