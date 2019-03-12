@@ -50,7 +50,7 @@ def print_stl_information(model):
     print("\tNormal count: %d" % len(model.normals))
     print("\tPoint count: %d" % len(model.points))
 
-def plot_model(face_collection):
+def plot_model(face_collection, model):
     # Create new empty plot
     fig = plt.figure()
     axes = mplot3d.Axes3D(fig)
@@ -89,99 +89,100 @@ def check_paths(model_path, target_path):
     if (target_exists is True):
         raise IOError("Target path for altered model already exists. Please change it.")
 
-# Settings
-model_path = 'fixed_models/architecture.stl'
-altered_model_path = 'fixed_models/architecture.stl'
-phi_min=np.pi/4             # Smallest allowed angle of overhang
-ignore_ground = False       # Setting this to False results in rendering issues when using matplotlib 3d plotting.
-convergence_break = True    # Stops the problem solving algorithm loop after the amount of warnings hasn't changed for n iterations.
-convergence_depth = 5       # How many iterations that needs to be the same before it counts as convergence.
-ground_tolerance = 0.01     # How close a vertex needs to be to the ground in order to be considered to be touching it.
-angle_tolerance=0.017       # How close an angle needs to be to phi_min in order to be considered to be acceptable.
-max_iterations=2000         # The maximum amount of iterations before the problem correction algorithm stops.
+def search_and_solve(model_path, altered_model_path, 
+    phi_min = np.pi/4,          # Smallest allowed angle of overhang
+    ignore_ground = False,      # Setting this to False results in rendering issues when using matplotlib 3d plotting.
+    convergence_break = True,    # Stops the problem solving algorithm loop after the amount of warnings hasn't changed for n iterations.
+    convergence_depth = 5,      # How many iterations that needs to be the same before it counts as convergence.
+    ground_tolerance = 0.01,    # How close a vertex needs to be to the ground in order to be considered to be touching it.
+    angle_tolerance = 0.017,    # How close an angle needs to be to phi_min in order to be considered to be acceptable.
+    max_iterations = 2000,
+    plot = True):       # The maximum amount of iterations before the problem correction algorithm stops.
+       
 
-# Check if model exists
-check_paths(model_path, altered_model_path)
+    # Check if model exists
+    check_paths(model_path, altered_model_path)
 
-# Start stopwatch
-time_start = timer()
+    # Start stopwatch
+    time_start = timer()
 
-# Load model
-model = mesh.Mesh.from_file(model_path)
+    # Load model
+    model = mesh.Mesh.from_file(model_path)
 
-# Extract lowest Z to use as ground level (if ignore_ground is set to False).
-ground_level=0
-if ignore_ground is False:
-    Z=[]
-    for polygon in model.vectors:
-        for vector in polygon:
-            Z.append(vector[2])
-    ground_level = min(Z)
-    print("Ground level identified as Z = %d" % ground_level)
+    # Extract lowest Z to use as ground level (if ignore_ground is set to False).
+    ground_level=0
+    if ignore_ground is False:
+        Z=[]
+        for polygon in model.vectors:
+            for vector in polygon:
+                Z.append(vector[2])
+        ground_level = min(Z)
+        print("Ground level identified as Z = %d" % ground_level)
 
-# Print info
-print_stl_information(model)
-time_model_info = timer()
+    # Print info
+    print_stl_information(model)
+    time_model_info = timer()
 
-# Set faces
-faces = collect_faces(model.vectors, model.normals)
-
-faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
-print("%d warnings detected" % faces.get_warning_count())
-print("%d unique verticies found" % len(faces.get_vertex_collection()))
-time_problem_detection = timer()
-
-print("\nProblem correction process initiated. phi_min = %f \t Max iterations: %d. Convergence detection activated: %s. Convergence depth: %d" % (phi_min, max_iterations, convergence_break, convergence_depth))
-iterations = 0
-previous_warning_count = []
-for i in range(0, max_iterations):
-    iterations = i + 1
-    pq = queue.PriorityQueue()
-    for face in faces:
-        if face.has_bad_angle is True:
-            pq.put(face)
-
-    if pq.empty():
-        print("No more problems encountered")
-        break
-
-    while not pq.empty():
-        face = pq.get()
-        single_face_algorithm(face, atype="additive", phi_min=phi_min)
-
-    for vertex in faces.get_vertex_collection():
-        net_vector = vertex.perform_change()
-        if net_vector is None:
-            continue
+    # Set faces
+    faces = collect_faces(model.vectors, model.normals)
 
     faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
-    
-    # Calculate completion percentage
-    print("Iteration (%d/%d):\t Approximate warnings detected: %d" % (i+1, max_iterations, faces.get_warning_count()))
+    print("%d warnings detected" % faces.get_warning_count())
+    print("%d unique verticies found" % len(faces.get_vertex_collection()))
+    time_problem_detection = timer()
 
-    # Check if the amount of warnings has converged towards a value. If so, then break.
-    if convergence_break is True:
-        previous_warning_count.append(faces.get_warning_count())
-        final_elements = previous_warning_count[len(previous_warning_count)-convergence_depth:] 
-        if max(final_elements) == min(final_elements) and len(previous_warning_count) > convergence_depth:
-            print("Warning count convergence detected. Breaking.")
+    print("\nProblem correction process initiated. phi_min = %f \t Max iterations: %d. Convergence detection activated: %s. Convergence depth: %d" % (phi_min, max_iterations, convergence_break, convergence_depth))
+    iterations = 0
+    previous_warning_count = []
+    for i in range(0, max_iterations):
+        iterations = i + 1
+        pq = queue.PriorityQueue()
+        for face in faces:
+            if face.has_bad_angle is True:
+                pq.put(face)
+
+        if pq.empty():
+            print("No more problems encountered")
             break
 
-# Stop first stopwatch
-time_problem_correction = timer()
+        while not pq.empty():
+            face = pq.get()
+            single_face_algorithm(face, atype="additive", phi_min=phi_min)
 
-# Save changes to a new STL file
-print("Saving changes to a new STL-file..")
-stl_creator = STLCreator(altered_model_path, faces)
-stl_creator.build_file()
-time_stl_creation = timer()
+        for vertex in faces.get_vertex_collection():
+            net_vector = vertex.perform_change()
+            if net_vector is None:
+                continue
 
-print("\nPerformance:")
-print("Loaded model information in %.2f seconds" % (time_model_info-time_start))
-print("Processed problem detection in %.2f seconds" % (time_problem_detection-time_model_info))
-print("Processed %d iterations of problem correction in %.2f seconds" % (iterations, time_problem_correction-time_problem_detection))
-print("Created a new STL file in %.2f seconds" % (time_stl_creation-time_problem_correction))
+        faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
+        
+        # Calculate completion percentage
+        print("Iteration (%d/%d):\t Approximate warnings detected: %d" % (i+1, max_iterations, faces.get_warning_count()))
 
-print("\nDone!")
+        # Check if the amount of warnings has converged towards a value. If so, then break.
+        if convergence_break is True:
+            previous_warning_count.append(faces.get_warning_count())
+            final_elements = previous_warning_count[len(previous_warning_count)-convergence_depth:] 
+            if max(final_elements) == min(final_elements) and len(previous_warning_count) > convergence_depth:
+                print("Warning count convergence detected. Breaking.")
+                break
 
-plot_model(faces)
+    # Stop first stopwatch
+    time_problem_correction = timer()
+
+    # Save changes to a new STL file
+    print("Saving changes to a new STL-file..")
+    stl_creator = STLCreator(altered_model_path, faces)
+    stl_creator.build_file()
+    time_stl_creation = timer()
+
+    print("\nPerformance:")
+    print("Loaded model information in %.2f seconds" % (time_model_info-time_start))
+    print("Processed problem detection in %.2f seconds" % (time_problem_detection-time_model_info))
+    print("Processed %d iterations of problem correction in %.2f seconds" % (iterations, time_problem_correction-time_problem_detection))
+    print("Created a new STL file in %.2f seconds" % (time_stl_creation-time_problem_correction))
+
+    print("\nDone!")
+        
+    if plot is True:
+        plot_model(faces, model)
