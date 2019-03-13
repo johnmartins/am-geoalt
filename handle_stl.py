@@ -15,6 +15,7 @@ from faces import Face, FaceCollection
 from verticies import Vertex, VertexCollection
 from problemsolver import single_face_algorithm
 from stl_creator import STLCreator
+import geoalt_exceptions as geoexc
 
 def collect_faces(verticies, normals):
     '''
@@ -84,10 +85,10 @@ def check_paths(model_path, target_path):
     target_exists = os.path.exists(target_path)
 
     if (model_exists is False):
-        raise IOError("Selected model does not exist")
+        raise geoexc.InputFileNotFound("Selected model does not exist")
 
     if (target_exists is True):
-        raise IOError("Target path for altered model already exists. Please change it.")
+        raise geoexc.OutputFileExists("Target path for altered model already exists. Please change it.")
 
 def search_and_solve(model_path, altered_model_path, 
     phi_min = np.pi/4,          # Smallest allowed angle of overhang
