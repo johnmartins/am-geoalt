@@ -137,17 +137,17 @@ def search_and_solve(model_path, altered_model_path,
     previous_warning_count = []
     for i in range(0, max_iterations):
         iterations = i + 1
-        pq = queue.PriorityQueue()
+        problem_stack = []
         for face in faces:
             if face.has_bad_angle is True:
-                pq.put(face)
+                problem_stack.append(face)
 
-        if pq.empty():
+        if len(problem_stack) == 0:
             print("No more problems encountered")
             break
 
-        while not pq.empty():
-            face = pq.get()
+        while len(problem_stack) != 0:
+            face = problem_stack.pop()
             single_face_algorithm(face, atype="additive", phi_min=phi_min)
 
         for vertex in faces.get_vertex_collection():
