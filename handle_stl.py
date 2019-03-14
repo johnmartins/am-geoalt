@@ -108,6 +108,7 @@ def search_and_solve(model_path, altered_model_path,
     time_start = timer()
 
     # Load model
+    print("Loading the model..")
     model = mesh.Mesh.from_file(model_path)
 
     # Extract lowest Z to use as ground level (if ignore_ground is set to False).
@@ -125,7 +126,10 @@ def search_and_solve(model_path, altered_model_path,
     time_model_info = timer()
 
     # Set faces
+    print("Collecting necessary vertex and face information..")
     faces = collect_faces(model.vectors, model.normals)
+
+    time_face_collection = timer()
 
     faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
     print("%d warnings detected" % faces.get_warning_count())
@@ -177,7 +181,8 @@ def search_and_solve(model_path, altered_model_path,
 
     print("\nPerformance:")
     print("Loaded model information in %.2f seconds" % (time_model_info-time_start))
-    print("Processed problem detection in %.2f seconds" % (time_problem_detection-time_model_info))
+    print("Gathered necessary vertex and face data in %.2f seconds" % (time_face_collection-time_model_info))
+    print("Processed problem detection in %.2f seconds" % (time_problem_detection-time_face_collection))
     print("Processed %d iterations of problem correction in %.2f seconds" % (iterations, time_problem_correction-time_problem_detection))
     print("Created a new STL file in %.2f seconds" % (time_stl_creation-time_problem_correction))
 
