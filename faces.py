@@ -83,7 +83,7 @@ class FaceCollection:
         self.problem_faces = []
         for f in self.faces:
             f.refresh_normal_vector()
-            has_bad_angle, angle = f.check_for_problems(phi_min=phi_min, ignore_grounded=ignore_grounded, ground_level=ground_level, ground_tolerance=ground_tolerance, angle_tolerance=angle_tolerance)
+            has_bad_angle = f.check_for_problems(phi_min=phi_min, ignore_grounded=ignore_grounded, ground_level=ground_level, ground_tolerance=ground_tolerance, angle_tolerance=angle_tolerance)
             if has_bad_angle is True:
                 self.problem_faces.append(f)
             else: 
@@ -156,20 +156,20 @@ class Face:
             # Check if grounded
             if self.check_grounded(ground_level, ground_tolerance) is True and ignore_grounded is False:
                 self.has_bad_angle = False
-                return False, angle
+                return False
 
             # Check if inside tolerence
             if np.abs(angle - phi_min) < angle_tolerance:
                 self.has_bad_angle = False
-                return False, angle
+                return False
             
             # If the angle is bad, and it is not on the ground, and is outside of tolerances, then mark it as a bad angle.
             self.has_bad_angle = True
-            return True, angle
+            return True
         
         # The angle is outside of the problem threshold and should thus be marked as an accepted angle.
         self.has_bad_angle = False
-        return False, angle
+        return False
 
     def get_verticies_as_arrays(self):
         return np.array([self.vertex1.get_array(), self.vertex2.get_array(), self.vertex3.get_array()])
