@@ -60,7 +60,7 @@ def plot_model(face_collection, model):
     axes.set_zlabel("Z axis")
 
     # Add vectors from models to plot
-    good_collection = mplot3d.art3d.Poly3DCollection(face_collection.get_verticies(vtype="all"))
+    good_collection = mplot3d.art3d.Poly3DCollection(face_collection.get_verticies(vtype="good"))
     good_collection.set_edgecolor('black') # Wireframe
     good_collection.set_facecolor('green')
 
@@ -68,7 +68,7 @@ def plot_model(face_collection, model):
     bad_collection.set_edgecolor('black') # Wireframe
     bad_collection.set_facecolor('red')
     axes.add_collection3d(good_collection)
-    #axes.add_collection3d(bad_collection)
+    axes.add_collection3d(bad_collection)
 
     # Scale automatically
     scale = model.points.flatten('C')
@@ -137,28 +137,26 @@ def search_and_solve(model_path, altered_model_path,
     previous_warning_count = []
     for i in range(0, max_iterations):
         iterations = i + 1
-        problem_stack = []
-        for face in faces:
-            if face.has_bad_angle is True:
-                problem_stack.append(face)
 
-        if len(problem_stack) == 0:
+        # Display progression
+        print("Iteration (%d/%d):\t Approximate warnings detected: %d" % (i+1, max_iterations, faces.get_warning_count()))
+        
+        # Break if there are no more warnings
+        if faces.get_warning_count() == 0:
             print("No more problems encountered")
             break
 
-        while len(problem_stack) != 0:
-            face = problem_stack.pop()
-            single_face_algorithm(face, atype="additive", phi_min=phi_min)
+        # Go through each problematic face and run the SFA
+        for face in faces.problem_faces:
+            if face.has_bad_angle is True:
+                single_face_algorithm(face, atype="additive", phi_min=phi_min)
 
+        # For each vertex, apply the changes proposed by the SFA
         for vertex in faces.get_vertex_collection():
             net_vector = vertex.perform_change()
-            if net_vector is None:
-                continue
 
+        # Re-run the problem detection algorithm
         faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
-        
-        # Calculate completion percentage
-        print("Iteration (%d/%d):\t Approximate warnings detected: %d" % (i+1, max_iterations, faces.get_warning_count()))
 
         # Check if the amount of warnings has converged towards a value. If so, then break.
         if convergence_break is True:
