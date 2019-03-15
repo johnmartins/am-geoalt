@@ -3,3 +3,6 @@ models
 .vscode
 parse_this.stl
 fixed_models
+build
+dist
+geoalt.spec
