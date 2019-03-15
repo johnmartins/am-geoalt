@@ -1,13 +1,6 @@
 import numpy as np
 
 class VertexCollection(set):
-    '''
-    Collection of verticies. Can only contain one vertex per coordinate (no duplicates)
-    '''
-    def __init__(self):
-        self.x_vals = []
-        self.y_vals = []
-        self.z_vals = []
 
     def add(self, vertex):
         '''
@@ -19,9 +12,7 @@ class VertexCollection(set):
             return contains_res
         
         super().add(vertex)
-        self.x_vals.append(vertex.x)
-        self.y_vals.append(vertex.y)
-        self.z_vals.append(vertex.z)
+
         return vertex
     
     def contains(self, vertex):
