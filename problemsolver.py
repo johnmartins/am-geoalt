@@ -15,7 +15,7 @@ def single_face_algorithm(face, atype="additive", phi_min=np.pi/4):
         # Check if either vertex is a "pole". If it is, solve it
         check_and_correct_poles(face)
 
-        # Gather all verticies, and fetch all z-coordinates
+        # Gather all vertices, and fetch all z-coordinates
         vertex_matrix = np.array([face.vertex1.get_array(), face.vertex2.get_array(), face.vertex3.get_array()])
         vertex_list = [face.vertex1, face.vertex2, face.vertex3]
         z_cords = vertex_matrix[:,2]
@@ -23,9 +23,9 @@ def single_face_algorithm(face, atype="additive", phi_min=np.pi/4):
         # Check if plane is parallel to Z-plane.
         if z_cords[0] == z_cords[1] and z_cords[1] == z_cords[2]:
             # Come up with solution to this. Shrink towards middle, perhaps?
-            return
+            handle_flat_overhang(face)
         
-        # We only want to move the bottom two verticies, so we sort them. The vertex highest from the ground will be used as an "anchor", while the other two will be pushed
+        # We only want to move the bottom two vertices, so we sort them. The vertex highest from the ground will be used as an "anchor", while the other two will be pushed
         index_lowest_first = np.argsort(z_cords)
 
         # Notice that the n_hat (normal vector) is NOT updated in between the edits, as doing so would cause the second edit to move in the wrong direction.
@@ -62,6 +62,15 @@ def fix_angle_by_adding(anchor_vertex, roaming_vertex, n_hat, phi_min=np.pi/4):
     abs_diff = vector_xy - t_xy
     # Add diff to close the gap.
     roaming_vertex.add_change_partial(n_xy_hat*abs_diff)
+
+def handle_flat_overhang(face):
+    '''
+    This method will be used to group all methods of dealing with phi = 0 overhang faces
+    '''
+
+    for vertex in face.get_vertices():
+        pass
+    pass
 
 def introduce_angle(face):
     '''

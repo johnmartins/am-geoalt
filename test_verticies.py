@@ -1,4 +1,4 @@
-from verticies import *
+from vertices import *
 
 vc = VertexCollection()
 vertex1 = Vertex.from_array([1,2,3])
