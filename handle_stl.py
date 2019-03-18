@@ -12,22 +12,22 @@ import ntpath
 import os
 
 from faces import Face, FaceCollection
-from verticies import Vertex, VertexCollection
+from vertices import Vertex, VertexCollection
 from problemsolver import single_face_algorithm
 from stl_creator import STLCreator
 import geoalt_exceptions as geoexc
 
-def collect_faces(verticies, normals):
+def collect_faces(vertices, normals):
     '''
-    Take all verticies and normals from the STL file and lump them into directional faces.
+    Take all vertices and normals from the STL file and lump them into directional faces.
     '''
     # Get faces
     faces = FaceCollection()
     perp_tolerance = 0.001
-    for r in range(0,len(verticies)):
-        # Use verticies to calculate vectors. The vectors are then used to verify the normal vector.
-        v1 = np.array(verticies[r][0]) - np.array(verticies[r][1])
-        v2 = np.array(verticies[r][2]) - np.array(verticies[r][1])
+    for r in range(0,len(vertices)):
+        # Use vertices to calculate vectors. The vectors are then used to verify the normal vector.
+        v1 = np.array(vertices[r][0]) - np.array(vertices[r][1])
+        v2 = np.array(vertices[r][2]) - np.array(vertices[r][1])
         n = np.array(normals[r])
         res1 = np.dot(v1, n)
         res2 = np.dot(v2, n)
@@ -39,7 +39,7 @@ def collect_faces(verticies, normals):
             #raise ValueError("Non perpendicular normal vector encountered in STL file.")
         
         # Create new face, and append
-        f = Face(np.array(verticies[r][0]), np.array(verticies[r][1]), np.array(verticies[r][2]), n)
+        f = Face(np.array(vertices[r][0]), np.array(vertices[r][1]), np.array(vertices[r][2]), n)
         faces.append(f)
     return faces
 
@@ -60,11 +60,11 @@ def plot_model(face_collection, model):
     axes.set_zlabel("Z axis")
 
     # Add vectors from models to plot
-    good_collection = mplot3d.art3d.Poly3DCollection(face_collection.get_verticies(vtype="good"))
+    good_collection = mplot3d.art3d.Poly3DCollection(face_collection.get_vertices(vtype="good"))
     good_collection.set_edgecolor('black') # Wireframe
     good_collection.set_facecolor('green')
 
-    bad_collection = mplot3d.art3d.Poly3DCollection(face_collection.get_verticies(vtype="bad"))
+    bad_collection = mplot3d.art3d.Poly3DCollection(face_collection.get_vertices(vtype="bad"))
     bad_collection.set_edgecolor('black') # Wireframe
     bad_collection.set_facecolor('red')
     axes.add_collection3d(good_collection)
@@ -75,7 +75,7 @@ def plot_model(face_collection, model):
     axes.auto_scale_xyz(scale, scale, scale)
 
     # Plot points
-    #axes.scatter3D(model.x,model.y,model.z,color='yellow', s=1) # plot verticies
+    #axes.scatter3D(model.x,model.y,model.z,color='yellow', s=1) # plot vertices
 
     # Display plot
     plt.show()
@@ -133,7 +133,7 @@ def search_and_solve(model_path, altered_model_path,
 
     faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
     print("%d warnings detected" % faces.get_warning_count())
-    print("%d unique verticies found" % len(faces.get_vertex_collection()))
+    print("%d unique vertices found" % len(faces.get_vertex_collection()))
     time_problem_detection = timer()
 
     print("\nProblem correction process initiated. phi_min = %f \t Max iterations: %d. Convergence detection activated: %s. Convergence depth: %d" % (phi_min, max_iterations, convergence_break, convergence_depth))

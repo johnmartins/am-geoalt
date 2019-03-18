@@ -1,6 +1,6 @@
 import numpy as np
 
-from verticies import Vertex, VertexCollection
+from vertices import Vertex, VertexCollection
 
 class FaceCollection:
     '''
@@ -62,17 +62,17 @@ class FaceCollection:
         '''
         return len(self.problem_faces)
 
-    def get_verticies(self, vtype="all"):
+    def get_vertices(self, vtype="all"):
         return_array = []
         if vtype=="all":
             for f in self.faces:
-                return_array.append(f.get_verticies_as_arrays())
+                return_array.append(f.get_vertices_as_arrays())
         elif vtype=="bad":
             for f in self.problem_faces:
-                return_array.append(f.get_verticies_as_arrays())
+                return_array.append(f.get_vertices_as_arrays())
         elif vtype=="good":
             for f in self.good_faces:
-                return_array.append(f.get_verticies_as_arrays())
+                return_array.append(f.get_vertices_as_arrays())
         return return_array
 
     def get_vertex_collection(self):
@@ -96,7 +96,7 @@ class Face:
     '''
     def __init__(self, vertex1, vertex2, vertex3, n):
         '''
-        vert1, vert2, vert3: verticies of a polygon\n
+        vert1, vert2, vert3: vertices of a polygon\n
         n: normal vector\n
         phi_min: minimum angular difference between normal vector and -z_hat before marked as a problematic surface
         '''
@@ -111,9 +111,9 @@ class Face:
         self.has_bad_angle = None                   # True if this face has a problematic angle
         self.angle = None                           # The angle compared to the xy-plane
 
-    def __connect_verticies__(self):
+    def __connect_vertices__(self):
         '''
-        Connect all verticies to each other
+        Connect all vertices to each other
         '''
         self.vertex1.set_adjacency(self.vertex2)
         self.vertex1.set_adjacency(self.vertex3)
@@ -171,10 +171,10 @@ class Face:
         self.has_bad_angle = False
         return False
 
-    def get_verticies_as_arrays(self):
+    def get_vertices_as_arrays(self):
         return np.array([self.vertex1.get_array(), self.vertex2.get_array(), self.vertex3.get_array()])
 
-    def get_verticies(self):
+    def get_vertices(self):
         return [self.vertex1, self.vertex2, self.vertex3]
 
     def __lt__(self, other):
