@@ -88,7 +88,15 @@ class FaceCollection:
                 self.problem_faces.append(f)
             else: 
                 self.good_faces.append(f)
-
+    
+    def clear_faces_without_area(self):
+        # Loop through all faces
+        for i in range(len(self.faces) - 1, -1,-1):
+            # Check if face has area
+            if self.faces[i].get_area() < 0.0001:
+                # If face has no area, then it is not needed and can safely be deleted.
+                print("Encountered a face without an area")
+                self.faces.pop(i)
 
 class Face:
     '''
@@ -131,6 +139,9 @@ class Face:
         vector2 = self.vertex3.get_array() - self.vertex1.get_array()
         self.n = np.cross(vector1, vector2)
         self.n_hat = self.n/np.linalg.norm(self.n)
+
+    def get_area(self):
+        return np.linalg.norm(self.n) / 2
     
     def check_for_problems(self, phi_min=np.pi/4, ignore_grounded=False, ground_level=0, ground_tolerance = 0.01, angle_tolerance = 0.017):
         '''

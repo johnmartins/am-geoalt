@@ -83,6 +83,9 @@ class Vertex:
             self.is_pole = False
             vertex.is_pole = False
 
+    def get_adjacent_vertices(self):
+        return self.adjacencies
+
     def add_change_partial(self, vector):
         self.change_set.append(vector)
     

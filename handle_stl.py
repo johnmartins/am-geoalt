@@ -157,7 +157,7 @@ def search_and_solve(model_path, altered_model_path,
 
         # For each vertex, apply the changes proposed by the SFA
         for vertex in faces.get_vertex_collection():
-            net_vector = vertex.perform_change()
+            vertex.perform_change()
 
         # Re-run the problem detection algorithm
         faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)

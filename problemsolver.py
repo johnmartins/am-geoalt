@@ -33,9 +33,6 @@ def single_face_algorithm(face, atype="additive", phi_min=np.pi/4):
         fix_angle_by_adding(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[0]], face.n_hat_original, phi_min=phi_min)
         fix_angle_by_adding(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[1]], face.n_hat_original, phi_min=phi_min)
 
-        # After editing the vertexes the face normal vector needs to be updated.
-        face.refresh_normal_vector()
-
     else:
         raise TypeError("Non-supported algorithm type.")
 
@@ -68,9 +65,6 @@ def handle_flat_overhang(face):
     This method will be used to group all methods of dealing with phi = 0 overhang faces
     '''
 
-    for vertex in face.get_vertices():
-        pass
-    pass
 
 def introduce_angle(face):
     '''
