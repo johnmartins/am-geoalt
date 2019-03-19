@@ -1,6 +1,7 @@
 import numpy as np
 
 from vertices import Vertex, VertexCollection
+from edges import Edge, EdgeCollection
 
 class FaceCollection:
     '''
@@ -12,6 +13,7 @@ class FaceCollection:
         self.good_faces = []
 
         self.vertex_collection = VertexCollection()
+        self.edge_collection = EdgeCollection()
 
         self.iterator_pointer = 0
     
@@ -31,6 +33,12 @@ class FaceCollection:
         face.vertex1 = self.vertex_collection.add(face.vertex1)
         face.vertex2 = self.vertex_collection.add(face.vertex2)
         face.vertex3 = self.vertex_collection.add(face.vertex3)
+        face.edge1 = self.edge_collection.add(face.edge1)
+        face.edge2 = self.edge_collection.add(face.edge2)
+        face.edge3 = self.edge_collection.add(face.edge3)
+        face.edge1.add_face(face)
+        face.edge2.add_face(face)
+        face.edge3.add_face(face)
 
         # Each unique vertex is marked as adjacent to the other vertices in the face.
         face.vertex1.set_adjacency(face.vertex2)
@@ -77,6 +85,9 @@ class FaceCollection:
 
     def get_vertex_collection(self):
         return self.vertex_collection
+    
+    def get_edge_collection(self):
+        return self.edge_collection
 
     def check_for_problems(self, phi_min=np.pi/4, ignore_grounded=False, ground_level=0, ground_tolerance=0.01, angle_tolerance=0.017):
         self.good_faces = []
@@ -90,8 +101,13 @@ class FaceCollection:
                 self.good_faces.append(f)
     
     def clear_faces_without_area(self):
+        '''
+        Expensive method used to remove any "unused" faces (faces that lacks an area).
+        '''
         # Loop through all faces
         for i in range(len(self.faces) - 1, -1,-1):
+            # Update normal vector to ensure that the area calculation is correct.
+            self.faces[i].refresh_normal_vector()
             # Check if face has area
             if self.faces[i].get_area() < 0.0001:
                 # If face has no area, then it is not needed and can safely be deleted.
@@ -110,7 +126,10 @@ class Face:
         '''
         self.vertex1 = Vertex.from_array(vertex1)
         self.vertex2 = Vertex.from_array(vertex2)
-        self.vertex3 = Vertex.from_array(vertex3)   
+        self.vertex3 = Vertex.from_array(vertex3)
+        self.edge1 = Edge(self.vertex1, self.vertex2)
+        self.edge2 = Edge(self.vertex2, self.vertex3)
+        self.edge3 = Edge(self.vertex3, self.vertex1)
         self.top_z = self.__calc_top_z__()          # The highest Z coordinate
 
         self.n = n                                  # The normal vector
@@ -141,6 +160,13 @@ class Face:
         self.n_hat = self.n/np.linalg.norm(self.n)
 
     def get_area(self):
+        '''
+        Calculates and returns the area of a face. 
+        Requires the normal vector to be updated to avoid incorrect results.
+        In ordert update the normal vector, run "refresh_normal_vector" first on this face.
+        '''
+        # The magnitude of the cross product of the vectors that makes up this face divided by two returns the area.
+        # The cross product is the same as the normal vector, which is used to preserve resources.
         return np.linalg.norm(self.n) / 2
     
     def check_for_problems(self, phi_min=np.pi/4, ignore_grounded=False, ground_level=0, ground_tolerance = 0.01, angle_tolerance = 0.017):

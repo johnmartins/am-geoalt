@@ -134,6 +134,9 @@ def search_and_solve(model_path, altered_model_path,
     faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
     print("%d warnings detected" % faces.get_warning_count())
     print("%d unique vertices found" % len(faces.get_vertex_collection()))
+    print("%d unique edges found" % len(faces.get_edge_collection()))
+    for e in faces.get_edge_collection():
+        print(len(e.faces))
     time_problem_detection = timer()
 
     print("\nProblem correction process initiated. phi_min = %f \t Max iterations: %d. Convergence detection activated: %s. Convergence depth: %d" % (phi_min, max_iterations, convergence_break, convergence_depth))
