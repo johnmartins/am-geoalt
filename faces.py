@@ -36,6 +36,15 @@ class FaceCollection:
         face.edge1 = self.edge_collection.add(face.edge1)
         face.edge2 = self.edge_collection.add(face.edge2)
         face.edge3 = self.edge_collection.add(face.edge3)
+
+        # TODO: Improve this crappy code
+        face.edge1.vertex1 = face.vertex1 
+        face.edge1.vertex2 = face.vertex2
+        face.edge2.vertex1 = face.vertex2
+        face.edge2.vertex2 = face.vertex3
+        face.edge3.vertex1 = face.vertex3 
+        face.edge3.vertex2 = face.vertex1
+
         face.edge1.add_face(face)
         face.edge2.add_face(face)
         face.edge3.add_face(face)

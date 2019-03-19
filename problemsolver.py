@@ -72,7 +72,9 @@ def handle_flat_overhang(face):
             else:
                 # Check if the adjacent face has an angle, and is underneath this face.
                 if f.angle > 0.017 and face.top_z >= f.top_z:
-                    print("Found a candidate to pivot to")
+                    edge.vertex1.add_change_partial(np.array([0,0,-2]))
+                    edge.vertex2.add_change_partial(np.array([0,0,-2]))
+                    return
                     
 
 
