@@ -214,6 +214,9 @@ class Face:
     def get_vertices(self):
         return [self.vertex1, self.vertex2, self.vertex3]
 
+    def get_edges(self):
+        return [self.edge1, self.edge2, self.edge3]
+
     def __lt__(self, other):
         if self.top_z > other.top_z:
             return True

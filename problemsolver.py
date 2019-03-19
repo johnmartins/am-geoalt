@@ -64,6 +64,16 @@ def handle_flat_overhang(face):
     '''
     This method will be used to group all methods of dealing with phi = 0 overhang faces
     '''
+    for edge in face.get_edges():
+        for f in edge.faces:
+            if (f is face):
+                # If the face is this face, then move on..
+                continue
+            else:
+                # Check if the adjacent face has an angle, and is underneath this face.
+                if f.angle > 0.017 and face.top_z >= f.top_z:
+                    print("Found a candidate to pivot to")
+                    
 
 
 def introduce_angle(face):
