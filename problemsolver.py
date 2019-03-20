@@ -13,7 +13,9 @@ def single_face_algorithm(face, atype="additive", phi_min=np.pi/4):
         # Starts from the highest face and works its way down.
 
         # Check if either vertex is a "pole". If it is, solve it
-        check_and_correct_poles(face)
+        if check_and_correct_poles(face) is True:
+            # If a pole vertex was found, then skip processing this face for the rest of this cycle.
+            return
 
         # Gather all vertices, and fetch all z-coordinates
         vertex_matrix = np.array([face.vertex1.get_array(), face.vertex2.get_array(), face.vertex3.get_array()])
@@ -96,11 +98,14 @@ def check_and_correct_poles(face):
     '''
     if face.vertex1.is_pole:
         equalize_z_index(face.vertex1, face.vertex2, face.vertex3)
+        return True
     elif face.vertex2.is_pole:
         equalize_z_index(face.vertex2, face.vertex1, face.vertex3)
+        return True
     elif face.vertex3.is_pole:
         equalize_z_index(face.vertex3, face.vertex2, face.vertex1)
-    return
+        return True
+    return False
         
 def equalize_z_index(target_vertex, vertex1, vertex2):
     '''
@@ -109,3 +114,9 @@ def equalize_z_index(target_vertex, vertex1, vertex2):
     vertex1.z = target_vertex.z
     vertex2.z = target_vertex.z
     return
+
+def leak_search_and_destroy(edge_collection):
+    '''
+    Goes through all edges. If an edge only has one face associated with it, then there must be a leak.
+    '''
+    pass
