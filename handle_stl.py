@@ -12,7 +12,6 @@ import ntpath
 import os
 
 from faces import Face, FaceCollection
-from vertices import Vertex, VertexCollection
 from problemsolver import single_face_algorithm
 from stl_creator import STLCreator
 import geoalt_exceptions as geoexc

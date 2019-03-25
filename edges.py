@@ -4,6 +4,7 @@ class EdgeCollection(set):
     '''
     def __init__(self):
         self.edges = []
+        self.faces = []
     
     def add(self, edge):
         if (isinstance(edge, Edge) is False):
@@ -34,6 +35,7 @@ class Edge:
     def __init__(self, vertex1, vertex2):
         self.vertex1 = vertex1
         self.vertex2 = vertex2
+        self.faces = []
     
     def __eq__(self, other):
         if self.vertex1.__eq__(other.vertex1) and self.vertex2.__eq__(other.vertex2):
@@ -45,3 +47,7 @@ class Edge:
     def __hash__(self):
         h = hash(self.vertex1.x + self.vertex2.x + self.vertex1.y + self.vertex2.y + self.vertex1.z + self.vertex2.z)
         return h
+
+    def associate_with_face(self, face):
+        if face not in self.faces:
+            self.faces.append(face)

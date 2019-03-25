@@ -201,4 +201,12 @@ class Face:
     def calculate_normal_vector(self):
         n = np.cross((self.vertex2.get_array() - self.vertex1.get_array()),(self.vertex3.get_array() - self.vertex2.get_array()))
         return n/np.linalg.norm(n)
-        
+
+    def __eq__(self, other):
+        if self.vertex1 not in other.get_vertices():
+            return False
+        if self.vertex2 not in other.get_vertices():
+            return False
+        if self.vertex3 not in other.get_vertices():
+            return False
+        return True
