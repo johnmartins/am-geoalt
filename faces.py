@@ -1,6 +1,7 @@
 import numpy as np
 
 from vertices import Vertex, VertexCollection
+from edges import Edge, EdgeCollection
 
 class FaceCollection:
     '''
@@ -12,6 +13,7 @@ class FaceCollection:
         self.good_faces = []
 
         self.vertex_collection = VertexCollection()
+        self.edge_collection = EdgeCollection()
 
         self.iterator_pointer = 0
     
@@ -38,6 +40,8 @@ class FaceCollection:
         face.vertex2.set_adjacency(face.vertex3)
 
         self.faces.append(face)
+
+        face.set_edges(self.edge_collection)
     
     def __iter__(self):
         '''
@@ -103,6 +107,11 @@ class Face:
         self.vertex1 = Vertex.from_array(vertex1)
         self.vertex2 = Vertex.from_array(vertex2)
         self.vertex3 = Vertex.from_array(vertex3)   
+
+        self.edge1 = None
+        self.edge2 = None
+        self.edge3 = None
+
         self.top_z = self.__calc_top_z__()          # The highest Z coordinate
 
         self.n = n                                  # The normal vector
@@ -110,6 +119,14 @@ class Face:
         self.n_hat_original = self.calculate_normal_vector()    # The original normalized normal vector from when the model was loaded the first time
         self.has_bad_angle = None                   # True if this face has a problematic angle
         self.angle = None                           # The angle compared to the xy-plane
+
+    def set_edges(self, edge_collection):
+        self.edge1 = edge_collection.add(Edge(self.vertex1, self.vertex2))
+        self.edge2 = edge_collection.add(Edge(self.vertex2, self.vertex3))
+        self.edge3 = edge_collection.add(Edge(self.vertex3, self.vertex1))
+        self.edge1.associate_with_face(self)
+        self.edge2.associate_with_face(self)
+        self.edge3.associate_with_face(self)
 
     def __connect_vertices__(self):
         '''

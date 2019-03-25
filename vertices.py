@@ -35,6 +35,7 @@ class Vertex:
         self.y = y                  # Y coordinate
         self.z = z                  # Z coordinate
         self.change_set = []        # An array of changes proposed by the problem solver
+        self.eq_method = None
         
         # These variables are responsible for a vertex "knowledge" of its surrounding vertices
         self.adjacencies = set()    # A set of all adjacent vertices
@@ -51,9 +52,18 @@ class Vertex:
         return "VX({}, {}, {})".format(self.x, self.y, self.z)
 
     def __eq__(self, other):
-        if self.x == other.x and self.y == other.y and self.z == other.z:
+        if self.eq_method == "proximity":
+            if abs(self.x - other.x) > 0.001:
+                return False
+            if abs(self.y - other.y) > 0.001:
+                return False
+            if abs(self.z - other.z) > 0.001:
+                return False
             return True
-        return False
+        else:
+            if self.x == other.x and self.y == other.y and self.z == other.z:
+                return True
+            return False
 
     def __hash__(self):
         h = hash(self.x+self.y+self.z)

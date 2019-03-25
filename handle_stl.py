@@ -127,6 +127,14 @@ def search_and_solve(model_path, altered_model_path,
     # Set faces
     print("Collecting necessary vertex and face information..")
     faces = collect_faces(model.vectors, model.normals)
+    c_e = 0
+    c_e_prob = 0
+    for e in faces.edge_collection:
+        c_e += 1
+        if len(e.faces) == 1:
+            print("Really bad")
+            c_e_prob += 1
+    print("%d, %d" % (c_e, c_e_prob))
 
     time_face_collection = timer()
 

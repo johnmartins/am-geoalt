@@ -45,9 +45,11 @@ class Edge:
         return False
 
     def __hash__(self):
-        h = hash(self.vertex1.x + self.vertex2.x + self.vertex1.y + self.vertex2.y + self.vertex1.z + self.vertex2.z)
+        h = hash(self.vertex1.z + self.vertex2.z)
         return h
 
     def associate_with_face(self, face):
         if face not in self.faces:
             self.faces.append(face)
+        else:
+            print("Dafuq")
