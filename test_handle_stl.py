@@ -2,7 +2,7 @@ import os
 from handle_stl import search_and_solve
 
 input_file = "models/architecture.stl"
-output_file = "fixed_models/test_u_shape_30.stl"
+output_file = "fixed_models/test_arch.stl"
 
 if os.path.exists(output_file):
     print("Removing output..")
