@@ -1,15 +1,15 @@
 import os
 from handle_stl import search_and_solve
 
-input_file = "models/architecture.stl"
-output_file = "fixed_models/test_arch.stl"
+input_file = "models/wave.stl"
+output_file = "fixed_models/test.stl"
 
 if os.path.exists(output_file):
     print("Removing output..")
     os.remove(output_file)
 
 # Default parameter values
-max_iterations = 2000       # Should be high enough to handle most reasonably complex models
+max_iterations = 60       # Should be high enough to handle most reasonably complex models
 ignore_ground = False       # Treat lowest known occupied Z-coordinate as ground
 phi_min = 3.1415/4          # The minimum allowed overhang angle
 plot = False                # Plot the model using matplotlib when the process is done

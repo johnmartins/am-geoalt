@@ -34,7 +34,7 @@ class Vertex:
     Class variables:\n
         eq_method: "exact" or "proximity". Exact is quick, but imprecise. Proximity is slow, but better.\n
     '''
-    eq_method = "exact"
+    eq_method = "proximity"
 
     def __init__(self, x, y, z):
         self.x = x                  # X coordinate

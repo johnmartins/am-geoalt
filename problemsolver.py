@@ -13,7 +13,10 @@ def single_face_algorithm(face, atype="additive", phi_min=np.pi/4):
         # Starts from the highest face and works its way down.
 
         # Check if either vertex is a "pole". If it is, solve it
-        check_and_correct_poles(face)
+        has_pole = check_and_correct_poles(face)
+        if has_pole is True:
+            # If this face has a pole, then skip it for this iteration.
+            return
 
         # Gather all vertices, and fetch all z-coordinates
         vertex_matrix = np.array([face.vertex1.get_array(), face.vertex2.get_array(), face.vertex3.get_array()])
@@ -24,14 +27,20 @@ def single_face_algorithm(face, atype="additive", phi_min=np.pi/4):
         if z_cords[0] == z_cords[1] and z_cords[1] == z_cords[2]:
             # Come up with solution to this. Shrink towards middle, perhaps?
             handle_flat_overhang(face)
-        
+            return
+
+        # Decide wether or not to use the original normal vector.
+        normal_vector = face.n_hat_original
+        if normal_vector[0] == 0 and normal_vector[1] == 0:
+            normal_vector = face.calculate_normal_vector()
+
         # We only want to move the bottom two vertices, so we sort them. The vertex highest from the ground will be used as an "anchor", while the other two will be pushed
         index_lowest_first = np.argsort(z_cords)
 
         # Notice that the n_hat (normal vector) is NOT updated in between the edits, as doing so would cause the second edit to move in the wrong direction.
         # Instead, we use the original normal vector in order to maintain the original shape of the model.
-        fix_angle_by_adding(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[0]], face.n_hat_original, phi_min=phi_min)
-        fix_angle_by_adding(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[1]], face.n_hat_original, phi_min=phi_min)
+        fix_angle_by_adding(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[0]], normal_vector, phi_min=phi_min)
+        fix_angle_by_adding(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[1]], normal_vector, phi_min=phi_min)
 
         # After editing the vertexes the face normal vector needs to be updated.
         face.refresh_normal_vector()
@@ -67,10 +76,23 @@ def handle_flat_overhang(face):
     '''
     This method will be used to group all methods of dealing with phi = 0 overhang faces
     '''
+    for edge in face.get_edges():
+        for f in edge.faces:
+            if (f is face):
+                continue
+            else:
+                for vertex in face.get_vertices():
+                    if len(vertex.change_set) != 0:
+                        return
 
-    for vertex in face.get_vertices():
-        pass
-    pass
+                # Check if adjacent face has an angle, and that it is underneath this face.
+                if f.angle > 0.017 and face.top_z >= f.top_z:
+                    # Check if changes are already staged:
+                    print("[DEBUG] Fixing straight surface")
+                    # Introduce angle.
+                    edge.vertex1.add_change_partial(np.array([0,0,-2]))
+                    edge.vertex2.add_change_partial(np.array([0,0,-2]))
+                    return
 
 def introduce_angle(face):
     '''
@@ -90,11 +112,17 @@ def check_and_correct_poles(face):
     '''
     if face.vertex1.is_pole:
         equalize_z_index(face.vertex1, face.vertex2, face.vertex3)
+        return True
+
     elif face.vertex2.is_pole:
         equalize_z_index(face.vertex2, face.vertex1, face.vertex3)
+        return True
+
     elif face.vertex3.is_pole:
         equalize_z_index(face.vertex3, face.vertex2, face.vertex1)
-    return
+        return True
+
+    return False
         
 def equalize_z_index(target_vertex, vertex1, vertex2):
     '''
