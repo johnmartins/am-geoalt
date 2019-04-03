@@ -15,6 +15,7 @@ parser.add_argument("--plot", action="store_true", help="Plot the processed mode
 parser.add_argument("--angle_tolerance", type=float, help="Required proximity to phi_min.")
 parser.add_argument("--ground_tolerance", type=float, help="Required proximity to ground to be considered as touching it.")
 parser.add_argument("--no_convergence", action="store_true", help="If used then the algorithm will not stop if nothing changes. Not recommended.")
+parser.add_argument("-o","--overwrite", action="store_true", help="If used then the output file will be overwritten if it already exists.")
 args = parser.parse_args()
 
 # Default parameter values
@@ -26,6 +27,7 @@ ground_tolerance = 0.01     # How close a vertex needs to be to the ground in or
 angle_tolerance = 0.017     # How close an angle needs to be to phi_min in order to be considered non-problematic (0.017 rad ~ 1 deg)
 convergence_break = True    # If true, then the algorithm will stop once convergence has been reached (when warning count does not seem to change)
 convergence_depth = 5       # Stop meta-algorithm after the amount of problems hasn't changed for this many iterations
+overwrite = False
 
 # Check which arguments were specified, and overwrite respective default paramter values
 if args.imax:
@@ -44,6 +46,8 @@ if args.angle_tolerance:
     angle_tolerance = args.angle_tolerance
 if args.no_convergence:
     convergence_break = False
+if args.overwrite:
+    overwrite = True
 
 # Run the algorithm
 try:
@@ -55,7 +59,8 @@ try:
     plot=plot,
     ground_tolerance=ground_tolerance,
     angle_tolerance=angle_tolerance,
-    convergence_break=convergence_break)
+    convergence_break=convergence_break,
+    overwrite_output=overwrite)
 except geoexc.InputFileNotFound:
     print("Input file could not be found (%s). Please control the path provided" % args.input)
 except geoexc.OutputFileExists:

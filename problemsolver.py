@@ -2,7 +2,7 @@ from faces import Face
 import numpy as np
 import math
 
-def single_face_algorithm(face, atype="additive", phi_min=np.pi/4):
+def single_face_algorithm(face, atype="additive", phi_min=np.pi/4, ignore_flat_overhang=False):
     if (isinstance(face, Face) is False):
             raise TypeError('face argument needs to be of type Face().')
     if (isinstance(atype, str) is False):
@@ -24,7 +24,7 @@ def single_face_algorithm(face, atype="additive", phi_min=np.pi/4):
         z_cords = vertex_matrix[:,2]
 
         # Check if plane is parallel to Z-plane.
-        if z_cords[0] == z_cords[1] and z_cords[1] == z_cords[2]:
+        if z_cords[0] == z_cords[1] and z_cords[1] == z_cords[2] and ignore_flat_overhang is False:
             # Come up with solution to this. Shrink towards middle, perhaps?
             handle_flat_overhang(face)
             return
@@ -80,18 +80,28 @@ def handle_flat_overhang(face):
         for f in edge.faces:
             if (f is face):
                 continue
+
             else:
+                # Check if changes are already staged
+                # This prevents a flat surface from being treated more than once.
                 for vertex in face.get_vertices():
                     if len(vertex.change_set) != 0:
+                        # Changes has already been staged for this face. Leave it alone this iteration.
                         return
 
                 # Check if adjacent face has an angle, and that it is underneath this face.
                 if f.angle > 0.017 and face.top_z >= f.top_z:
-                    # Check if changes are already staged:
-                    print("[DEBUG] Fixing straight surface")
+                    print("[DEBUG] Adding angle to flat overhang face..")
+
+                    z_array = f.get_vertices_as_arrays()[:,2]
+                    # Sort the indexes in order of highest to lowest z value
+                    z_array_sorted_indexes = np.argsort(z_array)
+                    # Set z diff to halfway to the bottom of the face
+                    dz = (z_array[z_array_sorted_indexes[0]] - z_array[z_array_sorted_indexes[2]])/2
+
                     # Introduce angle.
-                    edge.vertex1.add_change_partial(np.array([0,0,-2]))
-                    edge.vertex2.add_change_partial(np.array([0,0,-2]))
+                    edge.vertex1.add_change_partial(np.array([0,0,dz]))
+                    edge.vertex2.add_change_partial(np.array([0,0,dz]))
                     return
 
 def introduce_angle(face):
