@@ -15,6 +15,7 @@ from faces import Face, FaceCollection
 from problemsolver import single_face_algorithm
 from stl_creator import STLCreator
 import geoalt_exceptions as geoexc
+from zero_phi_strategy import ZeroPhiStrategy
 
 def collect_faces(vertices, normals):
     '''
@@ -104,8 +105,8 @@ def search_and_solve(model_path, altered_model_path,
     angle_tolerance = 0.017,    # How close an angle needs to be to phi_min in order to be considered to be acceptable.
     max_iterations = 2000,
     plot = True,
-    overwrite_output = False):       # The maximum amount of iterations before the problem correction algorithm stops.
-       
+    overwrite_output = False,
+    zero_phi_strategy = ZeroPhiStrategy.NONE):       # The maximum amount of iterations before the problem correction algorithm stops.
 
     # Check if model exists
     check_paths(model_path, altered_model_path, overwrite_output)
@@ -164,7 +165,7 @@ def search_and_solve(model_path, altered_model_path,
         # Go through each problematic face and run the SFA
         for face in faces.problem_faces:
             if face.has_bad_angle is True:
-                single_face_algorithm(face, atype="additive", phi_min=phi_min, ignore_flat_overhang=False)
+                single_face_algorithm(face, atype="additive", phi_min=phi_min, zero_phi_strategy=zero_phi_strategy)
 
         # For each vertex, apply the changes proposed by the SFA
         for vertex in faces.get_vertex_collection():

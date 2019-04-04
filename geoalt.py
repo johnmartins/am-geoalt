@@ -2,6 +2,7 @@ import sys
 import argparse
 from handle_stl import search_and_solve
 import geoalt_exceptions as geoexc
+from zero_phi_strategy import ZeroPhiStrategy
 
 # Parse command line arguments
 parser = argparse.ArgumentParser()
@@ -16,6 +17,7 @@ parser.add_argument("--angle_tolerance", type=float, help="Required proximity to
 parser.add_argument("--ground_tolerance", type=float, help="Required proximity to ground to be considered as touching it.")
 parser.add_argument("--no_convergence", action="store_true", help="If used then the algorithm will not stop if nothing changes. Not recommended.")
 parser.add_argument("-o","--overwrite", action="store_true", help="If used then the output file will be overwritten if it already exists.")
+parser.add_argument("-zps","--zero_phi_strategy", help="Zero Phi Strategy: How to deal with zero phi overhangs. Default is to ignore (None).")
 args = parser.parse_args()
 
 # Default parameter values
@@ -28,6 +30,7 @@ angle_tolerance = 0.017     # How close an angle needs to be to phi_min in order
 convergence_break = True    # If true, then the algorithm will stop once convergence has been reached (when warning count does not seem to change)
 convergence_depth = 5       # Stop meta-algorithm after the amount of problems hasn't changed for this many iterations
 overwrite = False
+zero_phi_strategy = ZeroPhiStrategy.NONE
 
 # Check which arguments were specified, and overwrite respective default paramter values
 if args.imax:
@@ -48,6 +51,14 @@ if args.no_convergence:
     convergence_break = False
 if args.overwrite:
     overwrite = True
+if args.zero_phi_strategy:
+    print("ZERO PHI STRAT: %s" % args.zero_phi_strategy.upper())
+    if args.zero_phi_strategy.upper() == "NONE":
+        zero_phi_strategy = ZeroPhiStrategy.NONE
+    elif args.zero_phi_strategy.upper() == "INJECT":
+        zero_phi_strategy = ZeroPhiStrategy.INJECT
+    else:
+        raise geoexc.InvalidInputArgument("No such zero phi strategy. Can only be none or inject.")
 
 # Run the algorithm
 try:
@@ -60,7 +71,8 @@ try:
     ground_tolerance=ground_tolerance,
     angle_tolerance=angle_tolerance,
     convergence_break=convergence_break,
-    overwrite_output=overwrite)
+    overwrite_output=overwrite,
+    zero_phi_strategy=zero_phi_strategy)
 except geoexc.InputFileNotFound:
     print("Input file could not be found (%s). Please control the path provided" % args.input)
 except geoexc.OutputFileExists:

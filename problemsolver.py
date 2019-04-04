@@ -1,8 +1,9 @@
 from faces import Face
 import numpy as np
 import math
+from zero_phi_strategy import ZeroPhiStrategy
 
-def single_face_algorithm(face, atype="additive", phi_min=np.pi/4, ignore_flat_overhang=False):
+def single_face_algorithm(face, atype="additive", phi_min=np.pi/4, zero_phi_strategy=ZeroPhiStrategy.NONE):
     if (isinstance(face, Face) is False):
             raise TypeError('face argument needs to be of type Face().')
     if (isinstance(atype, str) is False):
@@ -24,9 +25,9 @@ def single_face_algorithm(face, atype="additive", phi_min=np.pi/4, ignore_flat_o
         z_cords = vertex_matrix[:,2]
 
         # Check if plane is parallel to Z-plane.
-        if z_cords[0] == z_cords[1] and z_cords[1] == z_cords[2] and ignore_flat_overhang is False:
+        if z_cords[0] == z_cords[1] and z_cords[1] == z_cords[2]:
             # Come up with solution to this. Shrink towards middle, perhaps?
-            handle_flat_overhang(face)
+            handle_flat_overhang(face, zero_phi_strategy)
             return
 
         # Decide wether or not to use the original normal vector.
@@ -72,10 +73,19 @@ def fix_angle_by_adding(anchor_vertex, roaming_vertex, n_hat, phi_min=np.pi/4):
     # Add diff to close the gap.
     roaming_vertex.add_change_partial(n_xy_hat*abs_diff)
 
-def handle_flat_overhang(face):
+def handle_flat_overhang(face, strategy):
     '''
     This method will be used to group all methods of dealing with phi = 0 overhang faces
     '''
+    if strategy is ZeroPhiStrategy.INJECT:
+        introduce_angle(face)
+    else:
+        return
+
+def introduce_angle(face):
+    '''
+    This method is used to introduce an angle to an otherwise 0 angle plane
+    '''    
     for edge in face.get_edges():
         for f in edge.faces:
             if (f is face):
@@ -103,12 +113,6 @@ def handle_flat_overhang(face):
                     edge.vertex1.add_change_partial(np.array([0,0,dz]))
                     edge.vertex2.add_change_partial(np.array([0,0,dz]))
                     return
-
-def introduce_angle(face):
-    '''
-    This method is used to introduce an angle to an otherwise 0 angle plane
-    '''    
-    pass
 
 def move_towards_mass_centrum(face):
     '''
