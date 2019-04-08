@@ -12,10 +12,10 @@ import ntpath
 import os
 
 from faces import Face, FaceCollection
-from vertices import Vertex, VertexCollection
 from problemsolver import single_face_algorithm
 from stl_creator import STLCreator
 import geoalt_exceptions as geoexc
+from zero_phi_strategy import ZeroPhiStrategy
 
 def collect_faces(vertices, normals):
     '''
@@ -80,7 +80,7 @@ def plot_model(face_collection, model):
     # Display plot
     plt.show()
 
-def check_paths(model_path, target_path):
+def check_paths(model_path, target_path, overwrite):
     model_exists = os.path.exists(model_path)
     target_exists = os.path.exists(target_path)
 
@@ -88,7 +88,13 @@ def check_paths(model_path, target_path):
         raise geoexc.InputFileNotFound("Selected model does not exist")
 
     if (target_exists is True):
-        raise geoexc.OutputFileExists("Target path for altered model already exists. Please change it.")
+        if overwrite is False:
+            raise geoexc.OutputFileExists("Target path for altered model already exists. Please change it.")
+        elif overwrite is True:
+            print("Overwriting output file..")
+            os.remove(target_path)
+        else:
+            raise geoexc.InvalidInputArgument("Invalid overwrite argument")
 
 def search_and_solve(model_path, altered_model_path, 
     phi_min = np.pi/4,          # Smallest allowed angle of overhang
@@ -98,11 +104,12 @@ def search_and_solve(model_path, altered_model_path,
     ground_tolerance = 0.01,    # How close a vertex needs to be to the ground in order to be considered to be touching it.
     angle_tolerance = 0.017,    # How close an angle needs to be to phi_min in order to be considered to be acceptable.
     max_iterations = 2000,
-    plot = True):       # The maximum amount of iterations before the problem correction algorithm stops.
-       
+    plot = True,
+    overwrite_output = False,
+    zero_phi_strategy = ZeroPhiStrategy.NONE):       # The maximum amount of iterations before the problem correction algorithm stops.
 
     # Check if model exists
-    check_paths(model_path, altered_model_path)
+    check_paths(model_path, altered_model_path, overwrite_output)
 
     # Start stopwatch
     time_start = timer()
@@ -129,6 +136,11 @@ def search_and_solve(model_path, altered_model_path,
     print("Collecting necessary vertex and face information..")
     faces = collect_faces(model.vectors, model.normals)
 
+    # Check for leaks
+    for e in faces.edge_collection:
+        if len(e.faces) != 2:
+            print("POTENTIAL LEAK DETECTED! Bad Edge hash function, or leaking model")
+
     time_face_collection = timer()
 
     faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
@@ -153,7 +165,7 @@ def search_and_solve(model_path, altered_model_path,
         # Go through each problematic face and run the SFA
         for face in faces.problem_faces:
             if face.has_bad_angle is True:
-                single_face_algorithm(face, atype="additive", phi_min=phi_min)
+                single_face_algorithm(face, atype="additive", phi_min=phi_min, zero_phi_strategy=zero_phi_strategy)
 
         # For each vertex, apply the changes proposed by the SFA
         for vertex in faces.get_vertex_collection():

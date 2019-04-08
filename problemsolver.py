@@ -1,8 +1,9 @@
 from faces import Face
 import numpy as np
 import math
+from zero_phi_strategy import ZeroPhiStrategy, inject
 
-def single_face_algorithm(face, atype="additive", phi_min=np.pi/4):
+def single_face_algorithm(face, atype="additive", phi_min=np.pi/4, zero_phi_strategy=ZeroPhiStrategy.NONE):
     if (isinstance(face, Face) is False):
             raise TypeError('face argument needs to be of type Face().')
     if (isinstance(atype, str) is False):
@@ -13,7 +14,10 @@ def single_face_algorithm(face, atype="additive", phi_min=np.pi/4):
         # Starts from the highest face and works its way down.
 
         # Check if either vertex is a "pole". If it is, solve it
-        check_and_correct_poles(face)
+        has_pole = check_and_correct_poles(face)
+        if has_pole is True:
+            # If this face has a pole, then skip it for this iteration.
+            return
 
         # Gather all vertices, and fetch all z-coordinates
         vertex_matrix = np.array([face.vertex1.get_array(), face.vertex2.get_array(), face.vertex3.get_array()])
@@ -23,15 +27,21 @@ def single_face_algorithm(face, atype="additive", phi_min=np.pi/4):
         # Check if plane is parallel to Z-plane.
         if z_cords[0] == z_cords[1] and z_cords[1] == z_cords[2]:
             # Come up with solution to this. Shrink towards middle, perhaps?
-            handle_flat_overhang(face)
-        
+            handle_flat_overhang(face, zero_phi_strategy)
+            return
+
+        # Decide wether or not to use the original normal vector.
+        normal_vector = face.n_hat_original
+        if normal_vector[0] == 0 and normal_vector[1] == 0:
+            normal_vector = face.calculate_normal_vector()
+
         # We only want to move the bottom two vertices, so we sort them. The vertex highest from the ground will be used as an "anchor", while the other two will be pushed
         index_lowest_first = np.argsort(z_cords)
 
         # Notice that the n_hat (normal vector) is NOT updated in between the edits, as doing so would cause the second edit to move in the wrong direction.
         # Instead, we use the original normal vector in order to maintain the original shape of the model.
-        fix_angle_by_adding(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[0]], face.n_hat_original, phi_min=phi_min)
-        fix_angle_by_adding(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[1]], face.n_hat_original, phi_min=phi_min)
+        fix_angle_by_adding(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[0]], normal_vector, phi_min=phi_min)
+        fix_angle_by_adding(vertex_list[index_lowest_first[2]], vertex_list[index_lowest_first[1]], normal_vector, phi_min=phi_min)
 
         # After editing the vertexes the face normal vector needs to be updated.
         face.refresh_normal_vector()
@@ -63,20 +73,14 @@ def fix_angle_by_adding(anchor_vertex, roaming_vertex, n_hat, phi_min=np.pi/4):
     # Add diff to close the gap.
     roaming_vertex.add_change_partial(n_xy_hat*abs_diff)
 
-def handle_flat_overhang(face):
+def handle_flat_overhang(face, strategy):
     '''
     This method will be used to group all methods of dealing with phi = 0 overhang faces
     '''
-
-    for vertex in face.get_vertices():
-        pass
-    pass
-
-def introduce_angle(face):
-    '''
-    This method is used to introduce an angle to an otherwise 0 angle plane
-    '''    
-    pass
+    if strategy is ZeroPhiStrategy.INJECT:
+        inject(face)
+    else:
+        return
 
 def move_towards_mass_centrum(face):
     '''
@@ -90,11 +94,17 @@ def check_and_correct_poles(face):
     '''
     if face.vertex1.is_pole:
         equalize_z_index(face.vertex1, face.vertex2, face.vertex3)
+        return True
+
     elif face.vertex2.is_pole:
         equalize_z_index(face.vertex2, face.vertex1, face.vertex3)
+        return True
+
     elif face.vertex3.is_pole:
         equalize_z_index(face.vertex3, face.vertex2, face.vertex1)
-    return
+        return True
+
+    return False
         
 def equalize_z_index(target_vertex, vertex1, vertex2):
     '''

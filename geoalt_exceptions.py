@@ -3,3 +3,6 @@ class InputFileNotFound(Exception):
 
 class OutputFileExists(Exception):
     pass
+
+class InvalidInputArgument(Exception):
+    pass

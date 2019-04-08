@@ -30,6 +30,12 @@ class VertexCollection(set):
 
 
 class Vertex:
+    '''
+    Class variables:\n
+        eq_method: "exact" or "proximity". Exact is quick, but imprecise. Proximity is slow, but better.\n
+    '''
+    eq_method = "proximity"
+
     def __init__(self, x, y, z):
         self.x = x                  # X coordinate
         self.y = y                  # Y coordinate
@@ -51,9 +57,22 @@ class Vertex:
         return "VX({}, {}, {})".format(self.x, self.y, self.z)
 
     def __eq__(self, other):
-        if self.x == other.x and self.y == other.y and self.z == other.z:
+        if Vertex.eq_method == "proximity":
+            # Slow, but more certain
+            if abs(self.x - other.x) > 0.001:
+                return False
+            if abs(self.y - other.y) > 0.001:
+                return False
+            if abs(self.z - other.z) > 0.001:
+                return False
             return True
-        return False
+        elif Vertex.eq_method == "exact":
+            # Fast, but might cause leaks
+            if self.x == other.x and self.y == other.y and self.z == other.z:
+                return True
+            return False
+        else:
+            raise TypeError("Unknown eq method for Vertex class")
 
     def __hash__(self):
         h = hash(self.x+self.y+self.z)
