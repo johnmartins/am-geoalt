@@ -20,8 +20,8 @@ def single_face_algorithm(face, atype="additive", phi_min=np.pi/4, zero_phi_stra
             return
 
         # Gather all vertices, and fetch all z-coordinates
-        vertex_matrix = np.array([face.vertex1.get_array(), face.vertex2.get_array(), face.vertex3.get_array()])
-        vertex_list = [face.vertex1, face.vertex2, face.vertex3]
+        vertex_matrix = np.array([face.vertices[0].get_array(), face.vertices[1].get_array(), face.vertices[2].get_array()])
+        vertex_list = [face.vertices[0], face.vertices[1], face.vertices[2]]
         z_cords = vertex_matrix[:,2]
 
         # Check if plane is parallel to Z-plane.

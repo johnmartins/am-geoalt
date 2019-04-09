@@ -2,12 +2,14 @@ import numpy as np
 
 from vertices import Vertex, VertexCollection
 from edges import Edge, EdgeCollection
+from timeit import default_timer as timer
 
 class FaceCollection:
     '''
     Collection of Face objects
     '''
-    def __init__(self):
+    def __init__(self, stlfile):
+        self.stlfile = stlfile
         self.faces = []
         self.problem_faces = []
         self.good_faces = []
@@ -21,6 +23,7 @@ class FaceCollection:
         '''
         Add face to face collection
         '''
+        t1 = timer()
 
         if (isinstance(face, Face) is False):
             raise TypeError('face argument needs to be of type Face()')
@@ -29,19 +32,34 @@ class FaceCollection:
         else:
             self.good_faces.append(face)
 
+        t2 = timer()
+
         # This is where it is ensured using OOP that there only exists one instance of each unique vertex
-        face.vertex1 = self.vertex_collection.add(face.vertex1)
-        face.vertex2 = self.vertex_collection.add(face.vertex2)
-        face.vertex3 = self.vertex_collection.add(face.vertex3)
+        face.vertices[0] = self.vertex_collection.add(face.vertices[0])
+        face.vertices[1] = self.vertex_collection.add(face.vertices[1])
+        face.vertices[2] = self.vertex_collection.add(face.vertices[2])
+
+        t3 = timer()
 
         # Each unique vertex is marked as adjacent to the other vertices in the face.
-        face.vertex1.set_adjacency(face.vertex2)
-        face.vertex1.set_adjacency(face.vertex3)
-        face.vertex2.set_adjacency(face.vertex3)
+        face.vertices[0].set_adjacency(face.vertices[1])
+        face.vertices[0].set_adjacency(face.vertices[2])
+        face.vertices[1].set_adjacency(face.vertices[2])
 
         self.faces.append(face)
 
+        t4 = timer()
+
         face.set_edges(self.edge_collection)
+
+        t5 = timer()
+
+        t5 = t5 - t4
+        t4 = t4 - t3
+        t3 = t3 - t2
+        t2 = t2 - t1
+        return t2, t3, t4, t5
+
     
     def __iter__(self):
         '''
@@ -98,32 +116,35 @@ class Face:
     '''
     STL polygon face
     '''
-    def __init__(self, vertex1, vertex2, vertex3, n):
+    def __init__(self, face_collection, normal_index, vertex_index):
         '''
         vert1, vert2, vert3: vertices of a polygon\n
         n: normal vector\n
         phi_min: minimum angular difference between normal vector and -z_hat before marked as a problematic surface
         '''
-        self.vertex1 = Vertex.from_array(vertex1)
-        self.vertex2 = Vertex.from_array(vertex2)
-        self.vertex3 = Vertex.from_array(vertex3)   
+        self.face_collection = face_collection
+        self.normal_index = None
+        self.vertex_index = None
+
+        self.vertices = []
 
         self.edge1 = None
         self.edge2 = None
         self.edge3 = None
 
-        self.top_z = self.__calc_top_z__()          # The highest Z coordinate
-
-        self.n = n                                  # The normal vector
-        self.n_hat = n / np.linalg.norm(n)          # Normalized normal vector (unit vector)
-        self.n_hat_original = self.calculate_normal_vector()    # The original normalized normal vector from when the model was loaded the first time
-        self.has_bad_angle = None                   # True if this face has a problematic angle
-        self.angle = None                           # The angle compared to the xy-plane
+        self.n = None                   # The normal vector
+        self.n_hat = None               # Normalized normal vector (unit vector)
+        self.n_hat_original = None      # The original normalized normal vector from when the model was loaded the first time
+        self.has_bad_angle = None       # True if this face has a problematic angle
+        self.angle = None               # The angle compared to the xy-plane
 
     def set_edges(self, edge_collection):
-        self.edge1 = edge_collection.add(Edge(self.vertex1, self.vertex2))
-        self.edge2 = edge_collection.add(Edge(self.vertex2, self.vertex3))
-        self.edge3 = edge_collection.add(Edge(self.vertex3, self.vertex1))
+        # SLOW:
+        self.edge1 = edge_collection.add(Edge(self.vertices[0], self.vertices[1]))
+        self.edge2 = edge_collection.add(Edge(self.vertices[1], self.vertices[2]))
+        self.edge3 = edge_collection.add(Edge(self.vertices[2], self.vertices[0]))
+        
+        # FAST:
         self.edge1.associate_with_face(self)
         self.edge2.associate_with_face(self)
         self.edge3.associate_with_face(self)
@@ -132,20 +153,21 @@ class Face:
         '''
         Connect all vertices to each other
         '''
-        self.vertex1.set_adjacency(self.vertex2)
-        self.vertex1.set_adjacency(self.vertex3)
-        self.vertex2.set_adjacency(self.vertex3)
+        self.vertices[0].set_adjacency(self.vertices[1])
+        self.vertices[0].set_adjacency(self.vertices[2])
+        self.vertices[1].set_adjacency(self.vertices[2])
 
     def __calc_top_z__(self):
-        M = np.array([self.vertex1.get_array(), self.vertex2.get_array(), self.vertex3.get_array()])
+        self.top_z = self.__calc_top_z__()          # The highest Z coordinate
+        M = np.array([self.vertices[0].get_array(), self.vertices[1].get_array(), self.vertices[2].get_array()])
         z_array = M[:,2]
         index_lowest_first = np.argsort(z_array)
         topz = M[index_lowest_first[2],2]
         return topz
 
     def refresh_normal_vector(self):
-        vector1 = self.vertex2.get_array() - self.vertex1.get_array()
-        vector2 = self.vertex3.get_array() - self.vertex1.get_array()
+        vector1 = self.vertices[1].get_array() - self.vertices[0].get_array()
+        vector2 = self.vertices[2].get_array() - self.vertices[0].get_array()
         self.n = np.cross(vector1, vector2)
         self.n_hat = self.n/np.linalg.norm(self.n)
     
@@ -189,10 +211,10 @@ class Face:
         return False
 
     def get_vertices_as_arrays(self):
-        return np.array([self.vertex1.get_array(), self.vertex2.get_array(), self.vertex3.get_array()])
+        return np.array([self.vertices[0].get_array(), self.vertices[1].get_array(), self.vertices[2].get_array()])
 
     def get_vertices(self):
-        return [self.vertex1, self.vertex2, self.vertex3]
+        return [self.vertices[0], self.vertices[1], self.vertices[2]]
 
     def get_edges(self):
         return [self.edge1, self.edge2, self.edge3]
@@ -208,9 +230,9 @@ class Face:
         Check if this surface is parallel to the ground.
         '''
         # Calculate differences between individual vertex Z-elements, and the ground level.
-        diff_1 = np.abs(self.vertex1.get_array()[2] - ground_level)
-        diff_2 = np.abs(self.vertex2.get_array()[2] - ground_level)
-        diff_3 = np.abs(self.vertex3.get_array()[2] - ground_level)
+        diff_1 = np.abs(self.vertices[0].get_array()[2] - ground_level)
+        diff_2 = np.abs(self.vertices[1].get_array()[2] - ground_level)
+        diff_3 = np.abs(self.vertices[2].get_array()[2] - ground_level)
 
         # If any of the ground levels is above the threshold, then return false, else return true.
         if diff_1 > ground_tolerance or diff_2 > ground_tolerance or diff_3 > ground_tolerance:
@@ -219,14 +241,14 @@ class Face:
         return True
 
     def calculate_normal_vector(self):
-        n = np.cross((self.vertex2.get_array() - self.vertex1.get_array()),(self.vertex3.get_array() - self.vertex2.get_array()))
+        n = np.cross((self.vertices[1].get_array() - self.vertices[0].get_array()),(self.vertices[2].get_array() - self.vertices[1].get_array()))
         return n/np.linalg.norm(n)
 
     def __eq__(self, other):
-        if self.vertex1 not in other.get_vertices():
+        if self.vertices[0] not in other.get_vertices():
             return False
-        if self.vertex2 not in other.get_vertices():
+        if self.vertices[1] not in other.get_vertices():
             return False
-        if self.vertex3 not in other.get_vertices():
+        if self.vertices[2] not in other.get_vertices():
             return False
         return True
