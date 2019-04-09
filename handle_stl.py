@@ -15,39 +15,11 @@ import geoalt_exceptions as geoexc
 from zero_phi_strategy import ZeroPhiStrategy
 from stl_parser import STLfile
 
-def collect_faces(vertices, normals):
-    '''
-    Take all vertices and normals from the STL file and lump them into directional faces.
-    '''
-    # Get faces
-    faces = FaceCollection()
-    perp_tolerance = 0.001
-    for r in range(0,len(vertices)):
-        # Use vertices to calculate vectors. The vectors are then used to verify the normal vector.
-        v1 = np.array(vertices[r][0]) - np.array(vertices[r][1])
-        v2 = np.array(vertices[r][2]) - np.array(vertices[r][1])
-        n = np.array(normals[r])
-        res1 = np.dot(v1, n)
-        res2 = np.dot(v2, n)
-
-        # Ensure that the vectors are perpendicular to the normal
-        if (res1 > perp_tolerance or res2 > perp_tolerance):
-            print("Warning! Non-perpendicular normal vector encountered in STL file.")
-            print("diff1: %f, diff2: %f" % (res1, res2))
-            #raise ValueError("Non perpendicular normal vector encountered in STL file.")
-        
-        # Create new face, and append
-        f = Face(np.array(vertices[r][0]), np.array(vertices[r][1]), np.array(vertices[r][2]), n)
-        faces.append(f)
-    return faces
-
-def print_stl_information(model):
+def print_stl_information(stl):
     print("Model information:")
-    print("\tName: %s" % model.name)
-    print("\tClosed: %s" % model.is_closed())
-    print("\tPolygon count: %d" % (len(model.vectors)))
-    print("\tNormal count: %d" % len(model.normals))
-    print("\tPoint count: %d" % len(model.points))
+    print("\tName: %s" % stl.header.replace('\n',''))
+    print("\tNormal count: %d" % len(stl.normals))
+    print("\tPoint count: %d" % len(stl.vertices))
 
 def plot_model(face_collection):
     # Create new empty plot
@@ -120,6 +92,8 @@ def search_and_solve(model_path, altered_model_path,
     time_model_info = timer()
 
     faces = stl.load_ascii()
+    stl.rotate(np.pi/2)
+    print_stl_information(stl)
 
     # Check for leaks
     for e in faces.edge_collection:

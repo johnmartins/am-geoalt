@@ -12,6 +12,21 @@ class STLfile:
         self.vertices = []
         self.normals = []
 
+    def rotate(self, theta):
+        t1 = timer()
+        print("Rotate")
+        b = np.array(self.vertices).T
+        theta = np.pi/16
+        a = np.array([
+            [np.cos(theta),0,np.sin(theta)],
+            [0,1,0],
+            [-np.sin(theta),0,np.cos(theta)]
+        ])
+        res = np.dot(a, b)
+        self.vertices = res.T.tolist()
+        t2 = timer()
+        print("TIME TO ROTATE: %.2f" % (t2-t1))
+
     def new_face(self, facecol, n):
         normal_index = len(self.normals)
         vertex_index = len(self.vertices)
@@ -38,12 +53,6 @@ class STLfile:
         ln = 1 # File line nr
         fl = 1 # Face line nr
 
-        t1_tot = 0
-        t2_tot = 0
-        t3_tot = 0
-        t4_tot = 0
-        t5_tot = 0
-
         current_face = None
 
         for line in f:
@@ -69,14 +78,9 @@ class STLfile:
                     search = re.search(r"vertex\s+(\S+)\s+(\S+)\s+(\S+)", vertexStr)
                     self.new_vertex(current_face, np.array([float(search.group(1)),float(search.group(2)),float(search.group(3))]))
                 elif fl == 7:
-                    t7_1 = timer()
                     # End facet
                     current_face.n_hat_original = current_face.refresh_normal_vector() 
-                    t2, t3, t4, t5 = facecol.append(current_face)
-                    t2_tot += t2
-                    t3_tot += t3
-                    t4_tot += t4
-                    t5_tot += t5
+                    facecol.append(current_face)
                     current_face = None
                     fl = 0
                 else:
@@ -84,12 +88,6 @@ class STLfile:
                 fl += 1 # Face line += 1
             ln += 1 # File line += 1
         f.close()
-
-        print("Performance:")
-        print("t2 tot: %.2f" % t2_tot)
-        print("t3 tot: %.2f" % t3_tot)
-        print("t4 tot: %.2f" % t4_tot)
-        print("t5 tot: %.2f" % t5_tot)
         return facecol
 
 def testParser():
@@ -113,3 +111,15 @@ def testParser():
     stl_creator = STLCreator("fixed_models/test.stl", facecol)
     stl_creator.build_file()
     print("Done")
+
+def testRotate():
+    print("Rotate")
+    b = np.array([[0,0,1],[0,1,0]]).T
+    theta = np.pi/2
+    a = np.array([
+        [np.cos(theta),0,np.sin(theta)],
+        [0,1,0],
+        [-np.sin(theta),0,np.cos(theta)]
+    ])
+    res = np.dot(a, b)
+    print(res)

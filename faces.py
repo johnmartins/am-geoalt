@@ -23,7 +23,6 @@ class FaceCollection:
         '''
         Add face to face collection
         '''
-        t1 = timer()
 
         if (isinstance(face, Face) is False):
             raise TypeError('face argument needs to be of type Face()')
@@ -32,14 +31,11 @@ class FaceCollection:
         else:
             self.good_faces.append(face)
 
-        t2 = timer()
 
         # This is where it is ensured using OOP that there only exists one instance of each unique vertex
         face.vertices[0] = self.vertex_collection.add(face.vertices[0])
         face.vertices[1] = self.vertex_collection.add(face.vertices[1])
         face.vertices[2] = self.vertex_collection.add(face.vertices[2])
-
-        t3 = timer()
 
         # Each unique vertex is marked as adjacent to the other vertices in the face.
         face.vertices[0].set_adjacency(face.vertices[1])
@@ -48,18 +44,9 @@ class FaceCollection:
 
         self.faces.append(face)
 
-        t4 = timer()
-
         face.set_edges(self.edge_collection)
 
-        t5 = timer()
-
-        t5 = t5 - t4
-        t4 = t4 - t3
-        t3 = t3 - t2
-        t2 = t2 - t1
-        return t2, t3, t4, t5
-
+        return
     
     def __iter__(self):
         '''
@@ -128,6 +115,8 @@ class Face:
 
         self.vertices = []
 
+        self.weight = 0
+
         self.edge1 = None
         self.edge2 = None
         self.edge3 = None
@@ -189,6 +178,7 @@ class Face:
         neg_z_hat = [0,0,-1]
         angle = np.arccos(np.clip(np.dot(self.n_hat, neg_z_hat), -1.0, 1.0))
         self.angle = angle
+        self.calculate_weight(self.angle, phi_min)
 
         # Check if angle is within problem threshold
         if angle >= 0 and angle < phi_min:
@@ -210,6 +200,17 @@ class Face:
         # The angle is outside of the problem threshold and should thus be marked as an accepted angle.
         self.has_bad_angle = False
         return False
+
+    def calculate_weight(self, angle, phi_min = np.pi/4):
+        if angle < 0.087:
+            # 5 degrees or less: Considered as flat overhang. 
+            self.weight = 10
+        elif angle < phi_min:
+            self.weight = 5
+        else:
+            self.weight = 0
+
+        return self.weight
 
     def get_vertices_as_arrays(self):
         return np.array([self.vertices[0].get_array(), self.vertices[1].get_array(), self.vertices[2].get_array()])
