@@ -3,6 +3,7 @@ from faces import Face, FaceCollection
 from vertices import Vertex
 from timeit import default_timer as timer
 import numpy as np
+from stl_creator import STLCreator
 
 class STLfile:
     def __init__(self, filename):
@@ -70,6 +71,7 @@ class STLfile:
                 elif fl == 7:
                     t7_1 = timer()
                     # End facet
+                    current_face.n_hat_original = current_face.refresh_normal_vector() 
                     t2, t3, t4, t5 = facecol.append(current_face)
                     t2_tot += t2
                     t3_tot += t3
@@ -90,15 +92,24 @@ class STLfile:
         print("t5 tot: %.2f" % t5_tot)
         return facecol
 
-t1 = timer()
+def testParser():
+    t1 = timer()
 
-stl = STLfile("models/mixer.stl")
-facecol = stl.load_ascii()
-t2 = timer()
+    stl = STLfile("models/architecture.stl")
+    facecol = stl.load_ascii()
+    t2 = timer()
 
-print(len(stl.normals))
-print(len(stl.vertices))
-print(len(facecol.get_vertex_collection()))
+    print(len(stl.normals))
+    print(len(stl.vertices))
+    print(len(facecol.get_vertex_collection()))
 
-dt = t2 - t1
-print("Time: %.2f seconds" % dt)
+    dt = t2 - t1
+    print("Time: %.2f seconds" % dt)
+
+    for e in facecol.edge_collection:
+        if len(e.faces) != 2:
+            print("POTENTIAL LEAK DETECTED!")
+
+    stl_creator = STLCreator("fixed_models/test.stl", facecol)
+    stl_creator.build_file()
+    print("Done")

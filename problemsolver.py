@@ -50,7 +50,7 @@ def single_face_algorithm(face, atype="additive", phi_min=np.pi/4, zero_phi_stra
         raise TypeError("Non-supported algorithm type.")
 
 def fix_angle_by_adding(anchor_vertex, roaming_vertex, n_hat, phi_min=np.pi/4):    
-    delta_z = anchor_vertex.z - roaming_vertex.z
+    delta_z = anchor_vertex.z() - roaming_vertex.z()
     # Make sure that the anchor is above the roaming vertex in the Z-axis
     if (delta_z <= 0 or delta_z < 0.01):
         return
@@ -92,17 +92,10 @@ def check_and_correct_poles(face):
     '''
     Checks if a face contains a pole vertex, and then seeks to equalize all Z-indicies if such a pole is found.
     '''
-    if face.vertex1.is_pole:
-        equalize_z_index(face.vertex1, face.vertex2, face.vertex3)
-        return True
-
-    elif face.vertex2.is_pole:
-        equalize_z_index(face.vertex2, face.vertex1, face.vertex3)
-        return True
-
-    elif face.vertex3.is_pole:
-        equalize_z_index(face.vertex3, face.vertex2, face.vertex1)
-        return True
+    for vertex in face.vertices:
+        if vertex.is_pole:
+            equalize_z_index(face.vertices[0], face.vertices[1], face.vertices[2])
+            return True
 
     return False
         

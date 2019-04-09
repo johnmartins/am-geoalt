@@ -3,11 +3,8 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
-import stl
 from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d import Axes3D
-from stl import mesh
-import queue
 import ntpath
 import os
 
@@ -16,6 +13,7 @@ from problemsolver import single_face_algorithm
 from stl_creator import STLCreator
 import geoalt_exceptions as geoexc
 from zero_phi_strategy import ZeroPhiStrategy
+from stl_parser import STLfile
 
 def collect_faces(vertices, normals):
     '''
@@ -51,7 +49,7 @@ def print_stl_information(model):
     print("\tNormal count: %d" % len(model.normals))
     print("\tPoint count: %d" % len(model.points))
 
-def plot_model(face_collection, model):
+def plot_model(face_collection):
     # Create new empty plot
     fig = plt.figure()
     axes = mplot3d.Axes3D(fig)
@@ -69,10 +67,6 @@ def plot_model(face_collection, model):
     bad_collection.set_facecolor('red')
     axes.add_collection3d(good_collection)
     axes.add_collection3d(bad_collection)
-
-    # Scale automatically
-    scale = model.points.flatten('C')
-    axes.auto_scale_xyz(scale, scale, scale)
 
     # Plot points
     #axes.scatter3D(model.x,model.y,model.z,color='yellow', s=1) # plot vertices
@@ -116,25 +110,16 @@ def search_and_solve(model_path, altered_model_path,
 
     # Load model
     print("Loading the model..")
-    model = mesh.Mesh.from_file(model_path)
+    stl = STLfile(model_path)
 
     # Extract lowest Z to use as ground level (if ignore_ground is set to False).
     ground_level=0
-    if ignore_ground is False:
-        Z=[]
-        for polygon in model.vectors:
-            for vector in polygon:
-                Z.append(vector[2])
-        ground_level = min(Z)
-        print("Ground level identified as Z = %d" % ground_level)
 
     # Print info
-    print_stl_information(model)
+    #print_stl_information(model)
     time_model_info = timer()
 
-    # Set faces
-    print("Collecting necessary vertex and face information..")
-    faces = collect_faces(model.vectors, model.normals)
+    faces = stl.load_ascii()
 
     # Check for leaks
     for e in faces.edge_collection:
@@ -201,4 +186,4 @@ def search_and_solve(model_path, altered_model_path,
     print("\nDone!")
         
     if plot is True:
-        plot_model(faces, model)
+        plot_model(faces)

@@ -89,7 +89,7 @@ class Vertex:
         '''
         Set the coordinate value of the vertex using a R^3 array
         '''
-        self.facecol.vertices[self.index] = array
+        self.facecol.stlfile.vertices[self.index] = array
 
     def set_adjacency(self, vertex):
         self.adjacencies.add(vertex)

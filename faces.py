@@ -170,6 +170,7 @@ class Face:
         vector2 = self.vertices[2].get_array() - self.vertices[0].get_array()
         self.n = np.cross(vector1, vector2)
         self.n_hat = self.n/np.linalg.norm(self.n)
+        return self.n_hat
     
     def check_for_problems(self, phi_min=np.pi/4, ignore_grounded=False, ground_level=0, ground_tolerance = 0.01, angle_tolerance = 0.017):
         '''
