@@ -18,6 +18,7 @@ class FaceCollection:
         self.edge_collection = EdgeCollection()
 
         self.iterator_pointer = 0
+        self.total_weight = 0
     
     def append(self, face):
         '''
@@ -88,15 +89,17 @@ class FaceCollection:
         return self.vertex_collection
 
     def check_for_problems(self, phi_min=np.pi/4, ignore_grounded=False, ground_level=0, ground_tolerance=0.01, angle_tolerance=0.017):
+        self.total_weight = 0
         self.good_faces = []
         self.problem_faces = []
         for f in self.faces:
             f.refresh_normal_vector()
-            has_bad_angle = f.check_for_problems(phi_min=phi_min, ignore_grounded=ignore_grounded, ground_level=ground_level, ground_tolerance=ground_tolerance, angle_tolerance=angle_tolerance)
+            has_bad_angle = f.check_for_problems(phi_min=phi_min, ignore_grounded=ignore_grounded, ground_level=ground_level, ground_tolerance=ground_tolerance, angle_tolerance=angle_tolerance, no_weight_update=False)
             if has_bad_angle is True:
                 self.problem_faces.append(f)
             else: 
                 self.good_faces.append(f)
+        print("TOTAL WEIGHT: %.2f" % self.total_weight)
 
 
 class Face:
@@ -161,7 +164,7 @@ class Face:
         self.n_hat = self.n/np.linalg.norm(self.n)
         return self.n_hat
     
-    def check_for_problems(self, phi_min=np.pi/4, ignore_grounded=False, ground_level=0, ground_tolerance = 0.01, angle_tolerance = 0.017):
+    def check_for_problems(self, phi_min=np.pi/4, ignore_grounded=False, ground_level=0, ground_tolerance = 0.01, angle_tolerance = 0.017, no_weight_update=True):
         '''
         phi_min: Min angle before problem, in rads.\n
 
@@ -178,7 +181,7 @@ class Face:
         neg_z_hat = [0,0,-1]
         angle = np.arccos(np.clip(np.dot(self.n_hat, neg_z_hat), -1.0, 1.0))
         self.angle = angle
-        self.calculate_weight(self.angle, phi_min)
+        self.calculate_weight(self.angle, phi_min, no_update=no_weight_update)
 
         # Check if angle is within problem threshold
         if angle >= 0 and angle < phi_min:
@@ -201,16 +204,29 @@ class Face:
         self.has_bad_angle = False
         return False
 
-    def calculate_weight(self, angle, phi_min = np.pi/4):
+    def calculate_weight(self, angle, phi_min = np.pi/4, no_update=True):
+
+        # Calculate area of projection onto XY plane
+        vector1 = self.vertices[1].get_array() - self.vertices[0].get_array()
+        vector2 = self.vertices[2].get_array() - self.vertices[0].get_array()
+        cross = np.cross([vector1[0], vector1[1], 0], [vector2[0], vector2[1], 0])
+        area = np.linalg.norm(cross)/2
+
+        weightPerArea = 0
         if angle < 0.087:
             # 5 degrees or less: Considered as flat overhang. 
-            self.weight = 10
+            weightPerArea = 10
         elif angle < phi_min:
-            self.weight = 5
-        else:
-            self.weight = 0
+            weightPerArea = 5
+        
+        weight = weightPerArea * area
+        print("Angle: %.2f\t Area: %.2f\t Weight: %.2f" % (angle, area, self.weight))
+        
+        if no_update is False:
+            self.weight = weight
+            self.face_collection.total_weight += weight
 
-        return self.weight
+        return weight
 
     def get_vertices_as_arrays(self):
         return np.array([self.vertices[0].get_array(), self.vertices[1].get_array(), self.vertices[2].get_array()])
