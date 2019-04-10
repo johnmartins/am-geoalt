@@ -174,11 +174,3 @@ def testRotate():
     ])
     res = np.dot(a, b)
     print(res)
-
-def testBinary():
-    t1 = timer()
-
-    stl = STLfile("models/wiffle.stl")
-    facecol = stl.load()
-
-    t2 = timer()

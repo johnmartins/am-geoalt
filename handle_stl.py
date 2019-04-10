@@ -63,6 +63,24 @@ def check_paths(model_path, target_path, overwrite):
         else:
             raise geoexc.InvalidInputArgument("Invalid overwrite argument")
 
+def orientation_optimization(stl, facecol, ignore_grounded, ground_level, ground_tolerance, phi_min, angle_tolerance):
+    # Find optimal orientation
+    iterations_per_axis = 37
+    optimization_results = np.zeros([iterations_per_axis,3])
+
+    for i in range(0, iterations_per_axis):
+        degy = np.pi/180*5*i
+        degx = 0
+        stl.rotate(degy, axis='y')
+        ground_level = stl.ground_level
+        facecol.check_for_problems(ignore_grounded=ignore_grounded, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
+        print("%.2f Angle: %.2f\t Total weight: %.2f\t GL: %.2f" % (degy,i*5,facecol.total_weight, ground_level))
+        optimization_results[i] = [degy, degx, facecol.total_weight]
+        stl.rotate(-degy, axis='y')
+    
+    print(optimization_results)
+
+
 def search_and_solve(model_path, altered_model_path, 
     phi_min = np.pi/4,          # Smallest allowed angle of overhang
     ignore_ground = False,      # Setting this to False results in rendering issues when using matplotlib 3d plotting.
@@ -102,14 +120,9 @@ def search_and_solve(model_path, altered_model_path,
 
     time_face_collection = timer()
 
-    for i in range(0, 37):
-        deg = np.pi/180*5*i
-        stl.rotate(deg, axis='y')
-        ground_level = stl.ground_level
-        faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
-        print("%.2f Angle: %.2f\t Total weight: %.2f\t GL: %.2f" % (deg,i*5,faces.total_weight, ground_level))
-        stl.rotate(-deg, axis='y')
+    orientation_optimization(stl, faces, ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
 
+    # Do initial problem check
     faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
     print("%d overhang surfaces detected" % faces.get_warning_count())
     time_problem_detection = timer()
