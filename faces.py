@@ -99,7 +99,6 @@ class FaceCollection:
                 self.problem_faces.append(f)
             else: 
                 self.good_faces.append(f)
-        print("TOTAL WEIGHT: %.2f" % self.total_weight)
 
 
 class Face:
@@ -215,12 +214,13 @@ class Face:
         weightPerArea = 0
         if angle < 0.087:
             # 5 degrees or less: Considered as flat overhang. 
-            weightPerArea = 10
+            grounded = self.check_grounded
+            if grounded is False:
+                weightPerArea = 10
         elif angle < phi_min:
             weightPerArea = 5
         
         weight = weightPerArea * area
-        print("Angle: %.2f\t Area: %.2f\t Weight: %.2f" % (angle, area, self.weight))
         
         if no_update is False:
             self.weight = weight

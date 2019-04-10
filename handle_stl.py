@@ -93,7 +93,6 @@ def search_and_solve(model_path, altered_model_path,
 
     # Extract lowest Z to use as ground level (if ignore_ground is set to False).
     ground_level=stl.ground_level
-
     print_stl_information(stl)
 
     # Check for leaks
@@ -103,9 +102,16 @@ def search_and_solve(model_path, altered_model_path,
 
     time_face_collection = timer()
 
+    for i in range(0, 37):
+        deg = np.pi/180*5*i
+        stl.rotate(deg, axis='y')
+        ground_level = stl.ground_level
+        faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
+        print("%.2f Angle: %.2f\t Total weight: %.2f\t GL: %.2f" % (deg,i*5,faces.total_weight, ground_level))
+        stl.rotate(-deg, axis='y')
+
     faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
-    print("%d warnings detected" % faces.get_warning_count())
-    print("%d unique vertices found" % len(faces.get_vertex_collection()))
+    print("%d overhang surfaces detected" % faces.get_warning_count())
     time_problem_detection = timer()
 
     print("\nProblem correction process initiated. phi_min = %f \t Max iterations: %d. Convergence detection activated: %s. Convergence depth: %d" % (phi_min, max_iterations, convergence_break, convergence_depth))

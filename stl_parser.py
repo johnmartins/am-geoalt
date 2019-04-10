@@ -41,7 +41,6 @@ class STLfile:
     def calculate_ground_level(self):
         verts = np.array(self.vertices)
         self.ground_level = verts.min(axis=0)[2]
-        print(self.ground_level)
 
     def new_face(self, facecol, n):
         normal_index = len(self.normals)
