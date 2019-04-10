@@ -4,6 +4,7 @@ from vertices import Vertex
 from timeit import default_timer as timer
 import numpy as np
 from stl_creator import STLCreator
+from struct import unpack
 
 class STLfile:
     def __init__(self, filename):
@@ -40,6 +41,7 @@ class STLfile:
     def calculate_ground_level(self):
         verts = np.array(self.vertices)
         self.ground_level = verts.min(axis=0)[2]
+        print(self.ground_level)
 
     def new_face(self, facecol, n):
         normal_index = len(self.normals)
@@ -50,15 +52,40 @@ class STLfile:
         return face
 
     def new_vertex(self, face, array):
-        #print("Vertex: %s" % array)
         vertex_index = len(self.vertices)
         self.vertices.append(array)
         face.vertices.append(Vertex(face.face_collection, vertex_index))
 
     def load_binary(self):
+        facecol = FaceCollection(self)
         f = open(self.filename, 'rb')
+
+        self.header = f.read(80).decode('utf-8')
+        face_count = int.from_bytes(f.read(4), byteorder='little', signed=False)
+        
+        print(self.header)
+        print(face_count)
+
+        for i in range(0,face_count):
+            n = unpack('<fff', f.read(12))
+            face = self.new_face(facecol, [n[0], n[1], n[2]])
+
+            v1 = unpack('<fff', f.read(12))
+            self.new_vertex(face, [v1[0], v1[1], v1[2]])
+            v2 = unpack('<fff', f.read(12))
+            self.new_vertex(face, [v2[0], v2[1], v2[2]])
+            v3 = unpack('<fff', f.read(12))
+            self.new_vertex(face, [v3[0], v3[1], v3[2]])
+
+            face.refresh_normal_vector()
+            facecol.append(face)
+
+            spacer = int.from_bytes(f.read(2), byteorder='little', signed=False)
+
         f.close()
-        pass
+
+        self.calculate_ground_level()
+        return facecol
 
     def load_ascii(self):
         facecol = FaceCollection(self)
@@ -138,3 +165,13 @@ def testRotate():
     ])
     res = np.dot(a, b)
     print(res)
+
+def testBinary():
+    t1 = timer()
+
+    stl = STLfile("models/cylinder.stl")
+    facecol = stl.load_binary()
+
+    t2 = timer()
+
+testBinary()
