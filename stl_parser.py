@@ -56,15 +56,25 @@ class STLfile:
         self.vertices.append(array)
         face.vertices.append(Vertex(face.face_collection, vertex_index))
 
+    def load(self):
+        f = open(self.filename, 'rb')
+        type_str = f.read(5).decode('utf-8')
+        f.close()
+
+        if "SOLID" in type_str.upper():
+            return self.load_ascii()
+        if "COLOR" in type_str.upper():
+            raise TypeError("COLOR STL UNSUPPORTED ATM")
+        else:
+            return self.load_binary()
+
+
     def load_binary(self):
         facecol = FaceCollection(self)
         f = open(self.filename, 'rb')
 
         self.header = f.read(80).decode('utf-8')
         face_count = int.from_bytes(f.read(4), byteorder='little', signed=False)
-        
-        print(self.header)
-        print(face_count)
 
         for i in range(0,face_count):
             n = unpack('<fff', f.read(12))
@@ -77,7 +87,7 @@ class STLfile:
             v3 = unpack('<fff', f.read(12))
             self.new_vertex(face, [v3[0], v3[1], v3[2]])
 
-            face.refresh_normal_vector()
+            face.n_hat_original = face.refresh_normal_vector()
             facecol.append(face)
 
             spacer = int.from_bytes(f.read(2), byteorder='little', signed=False)
@@ -169,9 +179,7 @@ def testRotate():
 def testBinary():
     t1 = timer()
 
-    stl = STLfile("models/cylinder.stl")
-    facecol = stl.load_binary()
+    stl = STLfile("models/wiffle.stl")
+    facecol = stl.load()
 
     t2 = timer()
-
-testBinary()

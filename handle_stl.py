@@ -89,7 +89,7 @@ def search_and_solve(model_path, altered_model_path,
     #print_stl_information(model)
     time_model_info = timer()
 
-    faces = stl.load_ascii()
+    faces = stl.load()
 
     # Extract lowest Z to use as ground level (if ignore_ground is set to False).
     ground_level=stl.ground_level
