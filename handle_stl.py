@@ -20,6 +20,7 @@ def print_stl_information(stl):
     print("\tName: %s" % stl.header.replace('\n',''))
     print("\tNormal count: %d" % len(stl.normals))
     print("\tPoint count: %d" % len(stl.vertices))
+    print("\tGround level: %d" % stl.ground_level)
 
 def plot_model(face_collection):
     # Create new empty plot
@@ -84,15 +85,15 @@ def search_and_solve(model_path, altered_model_path,
     print("Loading the model..")
     stl = STLfile(model_path)
 
-    # Extract lowest Z to use as ground level (if ignore_ground is set to False).
-    ground_level=0
-
     # Print info
     #print_stl_information(model)
     time_model_info = timer()
 
     faces = stl.load_ascii()
-    stl.rotate(np.pi/2)
+
+    # Extract lowest Z to use as ground level (if ignore_ground is set to False).
+    ground_level=stl.ground_level
+
     print_stl_information(stl)
 
     # Check for leaks

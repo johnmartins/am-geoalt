@@ -103,6 +103,6 @@ def equalize_z_index(target_vertex, vertex1, vertex2):
     '''
     Sets the Z-coordinate of vertex1 and vertex2 to be the same as that of the target_vertex.
     '''
-    vertex1.z = target_vertex.z
-    vertex2.z = target_vertex.z
+    vertex1.set_array([vertex1.x(), vertex1.y(), target_vertex.z()])
+    vertex2.set_array([vertex2.x(), vertex2.y(), target_vertex.z()])
     return

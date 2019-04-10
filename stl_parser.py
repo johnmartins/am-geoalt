@@ -11,21 +11,35 @@ class STLfile:
         self.header = ""
         self.vertices = []
         self.normals = []
+        self.ground_level = 0
 
-    def rotate(self, theta):
-        t1 = timer()
-        print("Rotate")
+    def rotate(self, theta, axis):
         b = np.array(self.vertices).T
-        theta = np.pi/16
-        a = np.array([
-            [np.cos(theta),0,np.sin(theta)],
-            [0,1,0],
-            [-np.sin(theta),0,np.cos(theta)]
-        ])
-        res = np.dot(a, b)
+
+        if axis == "x":
+            T = np.array([
+                [1,0,0],
+                [0,np.cos(theta),-np.sin(theta)],
+                [0,np.sin(theta),np.cos(theta)]
+            ])
+        elif axis == "y":
+            T = np.array([
+                [np.cos(theta),0,np.sin(theta)],
+                [0,1,0],
+                [-np.sin(theta),0,np.cos(theta)]
+            ])
+        elif axis == "z":
+            pass
+        else:
+            raise TypeError('Value of axis needs to be the string value of x, y, or z.')
+
+        res = np.dot(T, b)
         self.vertices = res.T.tolist()
-        t2 = timer()
-        print("TIME TO ROTATE: %.2f" % (t2-t1))
+        self.calculate_ground_level()
+
+    def calculate_ground_level(self):
+        verts = np.array(self.vertices)
+        self.ground_level = verts.min(axis=0)[2]
 
     def new_face(self, facecol, n):
         normal_index = len(self.normals)
@@ -88,6 +102,7 @@ class STLfile:
                 fl += 1 # Face line += 1
             ln += 1 # File line += 1
         f.close()
+        self.calculate_ground_level()
         return facecol
 
 def testParser():
