@@ -21,7 +21,7 @@ parser.add_argument("-zps","--zero_phi_strategy", help="Zero Phi Strategy: How t
 args = parser.parse_args()
 
 # Default parameter values
-max_iterations = 2000       # Should be high enough to handle most reasonably complex models
+max_iterations = 0       # Should be high enough to handle most reasonably complex models
 ignore_ground = False       # Treat lowest known occupied Z-coordinate as ground
 phi_min = 3.1415/4          # The minimum allowed overhang angle
 plot = False                # Plot the model using matplotlib when the process is done

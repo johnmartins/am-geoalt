@@ -180,7 +180,7 @@ class Face:
         neg_z_hat = [0,0,-1]
         angle = np.arccos(np.clip(np.dot(self.n_hat, neg_z_hat), -1.0, 1.0))
         self.angle = angle
-        self.calculate_weight(self.angle, phi_min, no_update=no_weight_update)
+        self.calculate_weight(self.angle, ground_level, ground_tolerance, phi_min=phi_min, no_update=no_weight_update)
 
         # Check if angle is within problem threshold
         if angle >= 0 and angle < phi_min:
@@ -203,7 +203,7 @@ class Face:
         self.has_bad_angle = False
         return False
 
-    def calculate_weight(self, angle, phi_min = np.pi/4, no_update=True):
+    def calculate_weight(self, angle, ground_level, ground_tolerance, phi_min = np.pi/4, no_update=True):
 
         # Calculate area of projection onto XY plane
         vector1 = self.vertices[1].get_array() - self.vertices[0].get_array()
@@ -214,10 +214,12 @@ class Face:
         weightPerArea = 0
         if angle < 0.087:
             # 5 degrees or less: Considered as flat overhang. 
-            grounded = self.check_grounded
+            grounded = self.check_grounded(ground_level, ground_tolerance)
             if grounded is False:
-                weightPerArea = 10
+                weightPerArea = 20
         elif angle < phi_min:
+            weightPerArea = 10
+        elif phi_min < angle and angle < (phi_min+0.087):
             weightPerArea = 5
         
         weight = weightPerArea * area

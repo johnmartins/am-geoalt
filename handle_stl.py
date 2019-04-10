@@ -64,6 +64,10 @@ def check_paths(model_path, target_path, overwrite):
             raise geoexc.InvalidInputArgument("Invalid overwrite argument")
 
 def orientation_optimization(stl, facecol, ignore_grounded, ground_level, ground_tolerance, phi_min, angle_tolerance):
+    '''
+    This method is used to rotate the model into different orientations .
+    This is done to aid in finding the orientation most suitable for printing
+    '''
     # Find optimal orientation
     iterations_per_axis = 37
     optimization_results = np.zeros([iterations_per_axis,3])
@@ -75,10 +79,16 @@ def orientation_optimization(stl, facecol, ignore_grounded, ground_level, ground
         ground_level = stl.ground_level
         facecol.check_for_problems(ignore_grounded=ignore_grounded, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
         print("%.2f Angle: %.2f\t Total weight: %.2f\t GL: %.2f" % (degy,i*5,facecol.total_weight, ground_level))
-        optimization_results[i] = [degy, degx, facecol.total_weight]
+        optimization_results[i] = [degx, degy, facecol.total_weight]
         stl.rotate(-degy, axis='y')
-    
-    print(optimization_results)
+
+    weights = optimization_results[:,2]
+    weights_ordered_indices = np.argsort(weights)
+    print("Optimal Y Orientation: %.2f" % optimization_results[weights_ordered_indices[0],1])
+
+    stl.rotate(optimization_results[weights_ordered_indices[0],1], axis='y')
+
+    return stl.ground_level
 
 
 def search_and_solve(model_path, altered_model_path, 
@@ -96,17 +106,10 @@ def search_and_solve(model_path, altered_model_path,
     # Check if model exists
     check_paths(model_path, altered_model_path, overwrite_output)
 
-    # Start stopwatch
-    time_start = timer()
-
-    # Load model
+    time_model_info = timer()
+    # Load the model into memory
     print("Loading the model..")
     stl = STLfile(model_path)
-
-    # Print info
-    #print_stl_information(model)
-    time_model_info = timer()
-
     faces = stl.load()
 
     # Extract lowest Z to use as ground level (if ignore_ground is set to False).
@@ -120,9 +123,11 @@ def search_and_solve(model_path, altered_model_path,
 
     time_face_collection = timer()
 
-    orientation_optimization(stl, faces, ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
+    # Optimize the model for the best possible orientation
+    ground_level = orientation_optimization(stl, faces, ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
 
     # Do initial problem check
+    print(ground_level)
     faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
     print("%d overhang surfaces detected" % faces.get_warning_count())
     time_problem_detection = timer()
@@ -171,7 +176,6 @@ def search_and_solve(model_path, altered_model_path,
     time_stl_creation = timer()
 
     print("\nPerformance:")
-    print("Loaded model information in %.2f seconds" % (time_model_info-time_start))
     print("Gathered necessary vertex and face data in %.2f seconds" % (time_face_collection-time_model_info))
     print("Processed problem detection in %.2f seconds" % (time_problem_detection-time_face_collection))
     print("Processed %d iterations of problem correction in %.2f seconds" % (iterations, time_problem_correction-time_problem_detection))
