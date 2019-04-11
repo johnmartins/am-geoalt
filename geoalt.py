@@ -16,8 +16,9 @@ parser.add_argument("--plot", action="store_true", help="Plot the processed mode
 parser.add_argument("--angle_tolerance", type=float, help="Required proximity to phi_min.")
 parser.add_argument("--ground_tolerance", type=float, help="Required proximity to ground to be considered as touching it.")
 parser.add_argument("--no_convergence", action="store_true", help="If used then the algorithm will not stop if nothing changes. Not recommended.")
-parser.add_argument("-o","--overwrite", action="store_true", help="If used then the output file will be overwritten if it already exists.")
+parser.add_argument("-ow","--overwrite", action="store_true", help="If used then the output file will be overwritten if it already exists.")
 parser.add_argument("-zps","--zero_phi_strategy", help="Zero Phi Strategy: How to deal with zero phi overhangs. Default is to ignore (None).")
+parser.add_argument("-or", "--orientation", type=float, nargs="+", help="Provide a fixed orientation in which to print the model. Defaults to zero rotation.")
 args = parser.parse_args()
 
 # Default parameter values
@@ -31,6 +32,7 @@ convergence_break = True    # If true, then the algorithm will stop once converg
 convergence_depth = 5       # Stop meta-algorithm after the amount of problems hasn't changed for this many iterations
 overwrite = False
 zero_phi_strategy = ZeroPhiStrategy.NONE
+fixed_orientation = None
 
 # Check which arguments were specified, and overwrite respective default paramter values
 if args.imax:
@@ -59,6 +61,12 @@ if args.zero_phi_strategy:
         zero_phi_strategy = ZeroPhiStrategy.INJECT
     else:
         raise geoexc.InvalidInputArgument("No such zero phi strategy. Can only be none or inject.")
+if args.orientation:
+    if len(args.orientation) != 2:
+        raise geoexc.InvalidInputArgument("--orientation requires two arguments. For example: --orientation 3.14 1.57.")
+    else:
+        fixed_orientation = args.orientation
+
 
 # Run the algorithm
 try:
@@ -72,7 +80,8 @@ try:
     angle_tolerance=angle_tolerance,
     convergence_break=convergence_break,
     overwrite_output=overwrite,
-    zero_phi_strategy=zero_phi_strategy)
+    zero_phi_strategy=zero_phi_strategy,
+    fixed_orientation=fixed_orientation)
 except geoexc.InputFileNotFound:
     print("Input file could not be found (%s). Please control the path provided" % args.input)
 except geoexc.OutputFileExists:

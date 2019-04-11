@@ -63,45 +63,67 @@ def check_paths(model_path, target_path, overwrite):
         else:
             raise geoexc.InvalidInputArgument("Invalid overwrite argument")
 
+def display_best_orientations(res, wei):
+    print("Optimal orientation:\t Xrot = %.2f,\t Yrot = %.2f,\t Weight = %.2f" % (res[wei[0],0], res[wei[0],1], res[wei[0],2]))
+    for i in range(1,10):
+        if len(res) > i:
+            print("Alternative %d:\t Xrot = %.2f,\t Yrot = %.2f,\t Weight = %.2f" % (i+1,res[wei[i],0], res[wei[i],1], res[wei[i],2]))
+        else:
+            break
+
 def orientation_optimization(stl, facecol, ignore_grounded, ground_level, ground_tolerance, phi_min, angle_tolerance):
     '''
     This method is used to rotate the model into different orientations .
     This is done to aid in finding the orientation most suitable for printing
     '''
+    print("Performing orientation optimization..")
     # Find optimal orientation
     iterations_per_axis = 37
-    optimization_results = np.zeros([iterations_per_axis,3])
+    optimization_results = np.zeros([iterations_per_axis**2,3])
 
     for i in range(0, iterations_per_axis):
-        degy = np.pi/180*5*i
-        degx = 0
-        stl.rotate(degy, axis='y')
-        ground_level = stl.ground_level
-        facecol.check_for_problems(ignore_grounded=ignore_grounded, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
-        print("%.2f Angle: %.2f\t Total weight: %.2f\t GL: %.2f" % (degy,i*5,facecol.total_weight, ground_level))
-        optimization_results[i] = [degx, degy, facecol.total_weight]
-        stl.rotate(-degy, axis='y')
+        degx = np.pi/180*5*i
+        
+        # Rotate around X Axis
+        stl.rotate(degx, axis='x')
+
+        for j in range(0, iterations_per_axis):
+            # Rotate around y axis
+            degy = np.pi/180*5*j
+            stl.rotate(degy, axis='y')
+            ground_level = stl.ground_level
+            facecol.check_for_problems(ignore_grounded=ignore_grounded, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
+            optimization_results[(i*iterations_per_axis)+j] = [degx, degy, facecol.total_weight]
+            stl.rotate(-degy, axis='y')
+
+        # Reset rotation
+        stl.rotate(-degx, axis='x')
+
+        percentage_done = ((i+1)/iterations_per_axis) * 100
+        print("%.2f%% done" % percentage_done, end='\r', flush=True)
+
+    print("Done!", flush=True, end="\r")
 
     weights = optimization_results[:,2]
     weights_ordered_indices = np.argsort(weights)
-    print("Optimal Y Orientation: %.2f" % optimization_results[weights_ordered_indices[0],1])
+    display_best_orientations(optimization_results, weights_ordered_indices)
 
+    stl.rotate(optimization_results[weights_ordered_indices[0],0], axis='x')
     stl.rotate(optimization_results[weights_ordered_indices[0],1], axis='y')
-
-    return stl.ground_level
-
 
 def search_and_solve(model_path, altered_model_path, 
     phi_min = np.pi/4,          # Smallest allowed angle of overhang
     ignore_ground = False,      # Setting this to False results in rendering issues when using matplotlib 3d plotting.
-    convergence_break = True,    # Stops the problem solving algorithm loop after the amount of warnings hasn't changed for n iterations.
+    convergence_break = True,   # Stops the problem solving algorithm loop after the amount of warnings hasn't changed for n iterations.
     convergence_depth = 5,      # How many iterations that needs to be the same before it counts as convergence.
     ground_tolerance = 0.01,    # How close a vertex needs to be to the ground in order to be considered to be touching it.
     angle_tolerance = 0.017,    # How close an angle needs to be to phi_min in order to be considered to be acceptable.
-    max_iterations = 2000,
-    plot = True,
-    overwrite_output = False,
-    zero_phi_strategy = ZeroPhiStrategy.NONE):       # The maximum amount of iterations before the problem correction algorithm stops.
+    max_iterations = 2000,      # The maximum amount of iterations before the problem correction algorithm stops.
+    plot = True,                # Plot using matplotlib after the process is finished
+    overwrite_output = False,   # Overwrite target output file if it already exists
+    zero_phi_strategy = ZeroPhiStrategy.NONE,   # Strategy for dealing with flat overhangs
+    fixed_orientation = None,   # Pre-specified orientation
+    ignore_rot_opt = False):    # Skip orientation optimization (rotation optimization) step
 
     # Check if model exists
     check_paths(model_path, altered_model_path, overwrite_output)
@@ -124,10 +146,23 @@ def search_and_solve(model_path, altered_model_path,
     time_face_collection = timer()
 
     # Optimize the model for the best possible orientation
-    ground_level = orientation_optimization(stl, faces, ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
+    if fixed_orientation is not None:
+        ignore_rot_opt = True
+
+    if ignore_rot_opt is False:
+        orientation_optimization(stl, faces, 
+            ignore_grounded=ignore_ground, 
+            ground_level=ground_level, 
+            ground_tolerance=ground_tolerance, 
+            phi_min=phi_min, 
+            angle_tolerance=angle_tolerance)
+        ground_level = stl.ground_level
+    elif fixed_orientation is not None:
+        stl.rotate(fixed_orientation[0], axis='x')
+        stl.rotate(fixed_orientation[1], axis='y')
+        ground_level = stl.ground_level
 
     # Do initial problem check
-    print(ground_level)
     faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
     print("%d overhang surfaces detected" % faces.get_warning_count())
     time_problem_detection = timer()

@@ -3,7 +3,6 @@ import numpy as np
 class ZeroPhiStrategy(Enum):
     NONE = None
     INJECT = "Inject"
-    ORIENT = "Orient"
 
 def inject(face):
     '''
