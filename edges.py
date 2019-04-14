@@ -45,7 +45,8 @@ class Edge:
         return False
 
     def __hash__(self):
-        h = hash(self.vertex1.z + self.vertex2.z)
+        # TODO: Optimize.
+        h = hash(self.vertex1.z() + self.vertex2.z())
         return h
 
     def associate_with_face(self, face):

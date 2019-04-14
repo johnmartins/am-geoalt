@@ -51,9 +51,9 @@ class STLCreator:
             face.refresh_normal_vector()
             self.stream.write("\tfacet normal %f %f %f\n" % (face.n[0], face.n[1], face.n[2]))            
             self.stream.write("\t\touter loop\n")
-            self.stream.write("\t\t\tvertex %f %f %f\n" % (face.vertex1.x, face.vertex1.y, face.vertex1.z))
-            self.stream.write("\t\t\tvertex %f %f %f\n" % (face.vertex2.x, face.vertex2.y, face.vertex2.z))
-            self.stream.write("\t\t\tvertex %f %f %f\n" % (face.vertex3.x, face.vertex3.y, face.vertex3.z))
+            self.stream.write("\t\t\tvertex %f %f %f\n" % (face.vertices[0].x(), face.vertices[0].y(), face.vertices[0].z()))
+            self.stream.write("\t\t\tvertex %f %f %f\n" % (face.vertices[1].x(), face.vertices[1].y(), face.vertices[1].z()))
+            self.stream.write("\t\t\tvertex %f %f %f\n" % (face.vertices[2].x(), face.vertices[2].y(), face.vertices[2].z()))
             self.stream.write("\t\tendloop\n")
             self.stream.write("\tendfacet\n")
     

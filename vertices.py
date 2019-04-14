@@ -36,69 +36,70 @@ class Vertex:
     '''
     eq_method = "proximity"
 
-    def __init__(self, x, y, z):
-        self.x = x                  # X coordinate
-        self.y = y                  # Y coordinate
-        self.z = z                  # Z coordinate
+    def __init__(self, facecol, index):
+        self.facecol = facecol
+        self.index = index
         self.change_set = []        # An array of changes proposed by the problem solver
         
         # These variables are responsible for a vertex "knowledge" of its surrounding vertices
         self.adjacencies = set()    # A set of all adjacent vertices
         self.is_pole = True         # True if all adjacent vertices are above this vertex.
-    
-    @classmethod
-    def from_array(cls, array):
-        if len(array) != 3:
-            raise IndexError("The amount of elements can only be exactly 3 when using from_array method to create a Vertex")
-        (x, y, z) = array
-        return cls(x,y,z)
+
+    def x(self):
+        return self.facecol.stlfile.vertices[self.index][0]
+
+    def y(self):
+        return self.facecol.stlfile.vertices[self.index][1]
+
+    def z(self):
+        return self.facecol.stlfile.vertices[self.index][2]
 
     def __str__(self):
-        return "VX({}, {}, {})".format(self.x, self.y, self.z)
+        return "VX({}, {}, {})".format(self.x(), self.y(), self.z())
 
     def __eq__(self, other):
         if Vertex.eq_method == "proximity":
             # Slow, but more certain
-            if abs(self.x - other.x) > 0.001:
+            if abs(self.x() - other.x()) > 0.001:
                 return False
-            if abs(self.y - other.y) > 0.001:
+            if abs(self.y() - other.y()) > 0.001:
                 return False
-            if abs(self.z - other.z) > 0.001:
+            if abs(self.z() - other.z()) > 0.001:
                 return False
             return True
         elif Vertex.eq_method == "exact":
             # Fast, but might cause leaks
-            if self.x == other.x and self.y == other.y and self.z == other.z:
+            if self.x() == other.x() and self.y() == other.y() and self.z() == other.z():
                 return True
             return False
         else:
             raise TypeError("Unknown eq method for Vertex class")
 
     def __hash__(self):
-        h = hash(self.x+self.y+self.z)
+        h = hash(self.x()+self.y()+self.z())
         return h
 
     def get_array(self):
         '''
         Returns the vertex as a coordinate vector in the form of a numpy array
         '''
-        return np.array([self.x, self.y, self.z])
+        return np.array(self.facecol.stlfile.vertices[self.index])
 
     def set_array(self, array):
         '''
         Set the coordinate value of the vertex using a R^3 array
         '''
-        self.x, self.y, self.z = array
+        self.facecol.stlfile.vertices[self.index] = array
 
     def set_adjacency(self, vertex):
         self.adjacencies.add(vertex)
         vertex.adjacencies.add(self)
-        if vertex.z < self.z:
+        if vertex.z() < self.z():
             self.is_pole = False
         else:
             vertex.is_pole = False
         
-        if np.abs(vertex.z - self.z) < 0.01:
+        if np.abs(vertex.z() - self.z()) < 0.01:
             self.is_pole = False
             vertex.is_pole = False
 

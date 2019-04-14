@@ -3,11 +3,8 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
-import stl
 from mpl_toolkits import mplot3d
 from mpl_toolkits.mplot3d import Axes3D
-from stl import mesh
-import queue
 import ntpath
 import os
 
@@ -16,42 +13,16 @@ from problemsolver import single_face_algorithm
 from stl_creator import STLCreator
 import geoalt_exceptions as geoexc
 from zero_phi_strategy import ZeroPhiStrategy
+from stl_parser import STLfile
 
-def collect_faces(vertices, normals):
-    '''
-    Take all vertices and normals from the STL file and lump them into directional faces.
-    '''
-    # Get faces
-    faces = FaceCollection()
-    perp_tolerance = 0.001
-    for r in range(0,len(vertices)):
-        # Use vertices to calculate vectors. The vectors are then used to verify the normal vector.
-        v1 = np.array(vertices[r][0]) - np.array(vertices[r][1])
-        v2 = np.array(vertices[r][2]) - np.array(vertices[r][1])
-        n = np.array(normals[r])
-        res1 = np.dot(v1, n)
-        res2 = np.dot(v2, n)
-
-        # Ensure that the vectors are perpendicular to the normal
-        if (res1 > perp_tolerance or res2 > perp_tolerance):
-            print("Warning! Non-perpendicular normal vector encountered in STL file.")
-            print("diff1: %f, diff2: %f" % (res1, res2))
-            #raise ValueError("Non perpendicular normal vector encountered in STL file.")
-        
-        # Create new face, and append
-        f = Face(np.array(vertices[r][0]), np.array(vertices[r][1]), np.array(vertices[r][2]), n)
-        faces.append(f)
-    return faces
-
-def print_stl_information(model):
+def print_stl_information(stl):
     print("Model information:")
-    print("\tName: %s" % model.name)
-    print("\tClosed: %s" % model.is_closed())
-    print("\tPolygon count: %d" % (len(model.vectors)))
-    print("\tNormal count: %d" % len(model.normals))
-    print("\tPoint count: %d" % len(model.points))
+    print("\tName: %s" % stl.header.replace('\n',''))
+    print("\tNormal count: %d" % len(stl.normals))
+    print("\tPoint count: %d" % len(stl.vertices))
+    print("\tGround level: %d" % stl.ground_level)
 
-def plot_model(face_collection, model):
+def plot_model(face_collection):
     # Create new empty plot
     fig = plt.figure()
     axes = mplot3d.Axes3D(fig)
@@ -69,10 +40,6 @@ def plot_model(face_collection, model):
     bad_collection.set_facecolor('red')
     axes.add_collection3d(good_collection)
     axes.add_collection3d(bad_collection)
-
-    # Scale automatically
-    scale = model.points.flatten('C')
-    axes.auto_scale_xyz(scale, scale, scale)
 
     # Plot points
     #axes.scatter3D(model.x,model.y,model.z,color='yellow', s=1) # plot vertices
@@ -96,45 +63,80 @@ def check_paths(model_path, target_path, overwrite):
         else:
             raise geoexc.InvalidInputArgument("Invalid overwrite argument")
 
+def display_best_orientations(res, wei):
+    print("Optimal orientation:\t Xrot = %.2f,\t Yrot = %.2f,\t Weight = %.2f" % (res[wei[0],0], res[wei[0],1], res[wei[0],2]))
+    for i in range(1,10):
+        if len(res) > i:
+            print("Alternative %d:\t Xrot = %.2f,\t Yrot = %.2f,\t Weight = %.2f" % (i+1,res[wei[i],0], res[wei[i],1], res[wei[i],2]))
+        else:
+            break
+
+def orientation_optimization(stl, facecol, ignore_grounded, ground_level, ground_tolerance, phi_min, angle_tolerance):
+    '''
+    This method is used to rotate the model into different orientations .
+    This is done to aid in finding the orientation most suitable for printing
+    '''
+    print("Performing orientation optimization..")
+    # Find optimal orientation
+    iterations_per_axis = 37
+    optimization_results = np.zeros([iterations_per_axis**2,3])
+
+    for i in range(0, iterations_per_axis):
+        degx = np.pi/180*5*i
+        
+        # Rotate around X Axis
+        stl.rotate(degx, axis='x')
+
+        for j in range(0, iterations_per_axis):
+            # Rotate around y axis
+            degy = np.pi/180*5*j
+            stl.rotate(degy, axis='y')
+            ground_level = stl.ground_level
+            facecol.check_for_problems(ignore_grounded=ignore_grounded, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
+            optimization_results[(i*iterations_per_axis)+j] = [degx, degy, facecol.total_weight]
+            stl.rotate(-degy, axis='y')
+
+        # Reset rotation
+        stl.rotate(-degx, axis='x')
+
+        percentage_done = ((i+1)/iterations_per_axis) * 100
+        print("%.2f%% done" % percentage_done, end='\r', flush=True)
+
+    print("Done!", flush=True, end="\r")
+
+    weights = optimization_results[:,2]
+    weights_ordered_indices = np.argsort(weights)
+    display_best_orientations(optimization_results, weights_ordered_indices)
+
+    stl.rotate(optimization_results[weights_ordered_indices[0],0], axis='x')
+    stl.rotate(optimization_results[weights_ordered_indices[0],1], axis='y')
+
 def search_and_solve(model_path, altered_model_path, 
     phi_min = np.pi/4,          # Smallest allowed angle of overhang
     ignore_ground = False,      # Setting this to False results in rendering issues when using matplotlib 3d plotting.
-    convergence_break = True,    # Stops the problem solving algorithm loop after the amount of warnings hasn't changed for n iterations.
+    convergence_break = True,   # Stops the problem solving algorithm loop after the amount of warnings hasn't changed for n iterations.
     convergence_depth = 5,      # How many iterations that needs to be the same before it counts as convergence.
     ground_tolerance = 0.01,    # How close a vertex needs to be to the ground in order to be considered to be touching it.
     angle_tolerance = 0.017,    # How close an angle needs to be to phi_min in order to be considered to be acceptable.
-    max_iterations = 2000,
-    plot = True,
-    overwrite_output = False,
-    zero_phi_strategy = ZeroPhiStrategy.NONE):       # The maximum amount of iterations before the problem correction algorithm stops.
+    max_iterations = 2000,      # The maximum amount of iterations before the problem correction algorithm stops.
+    plot = True,                # Plot using matplotlib after the process is finished
+    overwrite_output = False,   # Overwrite target output file if it already exists
+    zero_phi_strategy = ZeroPhiStrategy.NONE,   # Strategy for dealing with flat overhangs
+    fixed_orientation = None,   # Pre-specified orientation
+    ignore_rot_opt = False):    # Skip orientation optimization (rotation optimization) step
 
     # Check if model exists
     check_paths(model_path, altered_model_path, overwrite_output)
 
-    # Start stopwatch
-    time_start = timer()
-
-    # Load model
+    time_model_info = timer()
+    # Load the model into memory
     print("Loading the model..")
-    model = mesh.Mesh.from_file(model_path)
+    stl = STLfile(model_path)
+    faces = stl.load()
 
     # Extract lowest Z to use as ground level (if ignore_ground is set to False).
-    ground_level=0
-    if ignore_ground is False:
-        Z=[]
-        for polygon in model.vectors:
-            for vector in polygon:
-                Z.append(vector[2])
-        ground_level = min(Z)
-        print("Ground level identified as Z = %d" % ground_level)
-
-    # Print info
-    print_stl_information(model)
-    time_model_info = timer()
-
-    # Set faces
-    print("Collecting necessary vertex and face information..")
-    faces = collect_faces(model.vectors, model.normals)
+    ground_level=stl.ground_level
+    print_stl_information(stl)
 
     # Check for leaks
     for e in faces.edge_collection:
@@ -143,9 +145,26 @@ def search_and_solve(model_path, altered_model_path,
 
     time_face_collection = timer()
 
+    # Optimize the model for the best possible orientation
+    if fixed_orientation is not None:
+        ignore_rot_opt = True
+
+    if ignore_rot_opt is False:
+        orientation_optimization(stl, faces, 
+            ignore_grounded=ignore_ground, 
+            ground_level=ground_level, 
+            ground_tolerance=ground_tolerance, 
+            phi_min=phi_min, 
+            angle_tolerance=angle_tolerance)
+        ground_level = stl.ground_level
+    elif fixed_orientation is not None:
+        stl.rotate(fixed_orientation[0], axis='x')
+        stl.rotate(fixed_orientation[1], axis='y')
+        ground_level = stl.ground_level
+
+    # Do initial problem check
     faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
-    print("%d warnings detected" % faces.get_warning_count())
-    print("%d unique vertices found" % len(faces.get_vertex_collection()))
+    print("%d overhang surfaces detected" % faces.get_warning_count())
     time_problem_detection = timer()
 
     print("\nProblem correction process initiated. phi_min = %f \t Max iterations: %d. Convergence detection activated: %s. Convergence depth: %d" % (phi_min, max_iterations, convergence_break, convergence_depth))
@@ -192,7 +211,6 @@ def search_and_solve(model_path, altered_model_path,
     time_stl_creation = timer()
 
     print("\nPerformance:")
-    print("Loaded model information in %.2f seconds" % (time_model_info-time_start))
     print("Gathered necessary vertex and face data in %.2f seconds" % (time_face_collection-time_model_info))
     print("Processed problem detection in %.2f seconds" % (time_problem_detection-time_face_collection))
     print("Processed %d iterations of problem correction in %.2f seconds" % (iterations, time_problem_correction-time_problem_detection))
@@ -201,4 +219,4 @@ def search_and_solve(model_path, altered_model_path,
     print("\nDone!")
         
     if plot is True:
-        plot_model(faces, model)
+        plot_model(faces)
