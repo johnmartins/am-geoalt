@@ -61,18 +61,28 @@ class STLfile:
         f.close()
 
         if "SOLID" in type_str.upper():
-            return self.load_ascii()
-        if "COLOR" in type_str.upper():
-            raise TypeError("COLOR STL UNSUPPORTED ATM")
-        else:
+            try:
+                return self.load_ascii()
+            except UnicodeDecodeError:
+                # If it fails to load as ascii, then it is probaby a binary file.
+                return self.load_binary()
+        elif "COLOR" in type_str.upper():
+            print("COLOR LOAD")
+            return self.load_binary(color=True)
+        elif force_mode == "BINARY":
             return self.load_binary()
 
+        return self.load_binary()
 
-    def load_binary(self):
+    def load_binary(self, color=False):
         facecol = FaceCollection(self)
         f = open(self.filename, 'rb')
 
-        self.header = f.read(80).decode('utf-8')
+        if color is True:
+            f.read(80)
+            self.header = "Colored solid."
+        else:
+            self.header = f.read(80).decode('utf-8')
         face_count = int.from_bytes(f.read(4), byteorder='little', signed=False)
 
         for i in range(0,face_count):
