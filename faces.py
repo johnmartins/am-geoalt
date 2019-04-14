@@ -216,7 +216,9 @@ class Face:
             # 5 degrees or less: Considered as flat overhang. 
             grounded = self.check_grounded(ground_level, ground_tolerance)
             if grounded is False:
-                weightPerArea = 20
+                weightPerArea = 25
+            else:
+                weightPerArea = -20 # Discount for flat surfaces touching the ground. Easier to remove from substrate.
         elif angle < phi_min:
             weightPerArea = 10
         elif phi_min < angle and angle < (phi_min+0.087):
