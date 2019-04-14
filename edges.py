@@ -53,4 +53,4 @@ class Edge:
         if face not in self.faces:
             self.faces.append(face)
         else:
-            print("Dafuq")
+            print("The model is broken beyond repair.")
