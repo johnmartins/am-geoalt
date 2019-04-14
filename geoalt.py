@@ -30,9 +30,9 @@ ground_tolerance = 0.01     # How close a vertex needs to be to the ground in or
 angle_tolerance = 0.017     # How close an angle needs to be to phi_min in order to be considered non-problematic (0.017 rad ~ 1 deg)
 convergence_break = True    # If true, then the algorithm will stop once convergence has been reached (when warning count does not seem to change)
 convergence_depth = 5       # Stop meta-algorithm after the amount of problems hasn't changed for this many iterations
-overwrite = False
-zero_phi_strategy = ZeroPhiStrategy.NONE
-fixed_orientation = None
+overwrite = False           # Overwrite the output file.
+zero_phi_strategy = ZeroPhiStrategy.NONE    # Used to select method to deal with flat overhangs.
+fixed_orientation = None    # Used when the user needs the model in a specific orientation.
 
 # Check which arguments were specified, and overwrite respective default paramter values
 if args.imax:

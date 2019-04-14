@@ -22,7 +22,7 @@ def inject(face):
                         return
 
                 # Check if adjacent face has an angle, and that it is underneath this face.
-                if f.angle > 0.017 and face.top_z >= f.top_z:
+                if f.angle > 0.017 and face.get_top_z() >= f.get_top_z():
                     print("[DEBUG] Adding angle to flat overhang face..")
 
                     z_array = f.get_vertices_as_arrays()[:,2]

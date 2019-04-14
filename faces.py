@@ -148,13 +148,10 @@ class Face:
         self.vertices[0].set_adjacency(self.vertices[2])
         self.vertices[1].set_adjacency(self.vertices[2])
 
-    def __calc_top_z__(self):
-        self.top_z = self.__calc_top_z__()          # The highest Z coordinate
-        M = np.array([self.vertices[0].get_array(), self.vertices[1].get_array(), self.vertices[2].get_array()])
-        z_array = M[:,2]
-        index_lowest_first = np.argsort(z_array)
-        topz = M[index_lowest_first[2],2]
-        return topz
+    def get_top_z(self):
+        z_array = np.array(self.get_vertices_as_arrays())[:,2]
+        print(z_array)
+        return z_array[np.argsort(z_array)[2]]
 
     def refresh_normal_vector(self):
         vector1 = self.vertices[1].get_array() - self.vertices[0].get_array()
@@ -221,7 +218,7 @@ class Face:
                 weightPerArea = -20 # Discount for flat surfaces touching the ground. Easier to remove from substrate.
         elif angle < phi_min:
             weightPerArea = 10
-        elif phi_min < angle and angle < (phi_min+0.087):
+        elif phi_min < angle and angle < (phi_min+0.087): # If the angle is just slightly (5 deg) above the limit
             weightPerArea = 5
         
         weight = weightPerArea * area
