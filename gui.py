@@ -42,25 +42,37 @@ class GeoAltGUI(wx.Frame):
         self.ang_ct.SetRange(10,80)
         self.ang_ct.SetValue(45)
         sizer.Add(self.ang_ct, pos=(0,1), span = (1, 2), flag = wx.EXPAND|wx.ALL, border = 5)
+        
+        # Orientation
+        or_l = wx.StaticText(panel, label='Orientation:')
+        sizer.Add(or_l, pos=(1,0), flag=wx.ALL, border=5)
+
+        opt_or = wx.CheckBox(panel, label="Analyze optimal orientation")
+        sizer.Add(opt_or, pos=(2,0), flag=wx.ALL, border=5)
+
+        or_static = wx.CheckBox(panel, label="Custom orientation")
+        sizer.Add(or_static, pos=(3,0), flag=wx.ALL, border=5)
 
         # STDOUT text box
         out_l = wx.StaticText(panel, label = "Output") 
-        sizer.Add(out_l, pos = (3, 0), flag = wx.ALL, border = 5) 
+        sizer.Add(out_l, pos = (4, 0), flag = wx.ALL, border = 5) 
 
         out_tb = wx.TextCtrl(panel,style =  wx.TE_MULTILINE) 
         out_tb.AppendText("---STANDARD OUT---\n")
-        sizer.Add(out_tb, pos = (3,1), span = (1,12), flag = wx.EXPAND|wx.ALL, border = 5) 
-        sizer.AddGrowableRow(3) 
+
+        sizer.Add(out_tb, pos = (4,1), span = (6,10), flag = wx.EXPAND|wx.ALL, border = 5) 
+        sizer.AddGrowableRow(4) 
+
         sys.stdout = StdoutRedirector(out_tb)
         sys.stderr = StdoutRedirector(out_tb, prefix="ERROR: ")
 
         # Bot buttons
-        exec_btn = wx.Button(panel, label = "Ok")
+        exec_btn = wx.Button(panel, label = "Run")
         self.Bind(wx.EVT_BUTTON, self.exec_geoalt, exec_btn) 
         buttonClose = wx.Button(panel, label = "Close" ) 
 
-        sizer.Add(exec_btn, pos = (4, 2),flag = wx.ALL, border = 5) 
-        sizer.Add(buttonClose, pos = (4, 3), flag = wx.ALL, border = 5)
+        sizer.Add(exec_btn, pos = (10, 0),flag = wx.ALL, border = 5) 
+        sizer.Add(buttonClose, pos = (10, 1), flag = wx.ALL, border = 5)
 
         panel.SetSizerAndFit(sizer)
 
