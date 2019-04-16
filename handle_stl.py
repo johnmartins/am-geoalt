@@ -64,10 +64,10 @@ def check_paths(model_path, target_path, overwrite):
             raise geoexc.InvalidInputArgument("Invalid overwrite argument")
 
 def display_best_orientations(res, wei):
-    print("Optimal orientation:\t Xrot = %.2f,\t Yrot = %.2f,\t Weight = %.2f" % (res[wei[0],0], res[wei[0],1], res[wei[0],2]))
+    print("Optimal orientation:\t Xrot = %.2f,\t Yrot = %.2f,\t Weight = %.2f" % (res[wei[0],0]*180/np.pi, res[wei[0],1]*180/np.pi, res[wei[0],2]))
     for i in range(1,10):
         if len(res) > i:
-            print("Alternative %d:\t Xrot = %.2f,\t Yrot = %.2f,\t Weight = %.2f" % (i+1,res[wei[i],0], res[wei[i],1], res[wei[i],2]))
+            print("Alternative %d:\t Xrot = %.2f,\t Yrot = %.2f,\t Weight = %.2f" % (i+1,res[wei[i],0]*180/np.pi, res[wei[i],1]*180/np.pi, res[wei[i],2]))
         else:
             break
 
