@@ -88,7 +88,7 @@ def orientation_optimization(stl, facecol, ignore_grounded, ground_level, ground
         stl.rotate(degx, axis='x')
         angular_step_size = np.pi/180*5
         degy = 0
-        
+
         for j in range(0, iterations_per_axis):
 
             # Rotate around y axis
@@ -106,7 +106,7 @@ def orientation_optimization(stl, facecol, ignore_grounded, ground_level, ground
         stl.rotate(-degx, axis='x')
 
         percentage_done = ((i+1)/iterations_per_axis) * 100
-        print("%.2f%% done" % percentage_done, end='\r', flush=True)
+        print("%.2f%%" % percentage_done, end='\r', flush=True)
 
     print("Done!", flush=True, end="\r")
 

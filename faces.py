@@ -128,6 +128,9 @@ class Face:
         self.n_hat_original = None      # The original normalized normal vector from when the model was loaded the first time
         self.has_bad_angle = None       # True if this face has a problematic angle
         self.angle = None               # The angle compared to the xy-plane
+        self.grounded = False
+        self.vector1 = None
+        self.vector2 = None
 
     def set_edges(self, edge_collection):
         # SLOW:
@@ -154,9 +157,9 @@ class Face:
         return z_array[np.argsort(z_array)[2]]
 
     def refresh_normal_vector(self):
-        vector1 = self.vertices[1].get_array() - self.vertices[0].get_array()
-        vector2 = self.vertices[2].get_array() - self.vertices[0].get_array()
-        self.n = np.cross(vector1, vector2)
+        self.vector1 = self.vertices[1].get_array() - self.vertices[0].get_array()
+        self.vector2 = self.vertices[2].get_array() - self.vertices[0].get_array()
+        self.n = np.cross(self.vector1, self.vector2)
         self.n_hat = self.n/np.linalg.norm(self.n)
         return self.n_hat
     
@@ -177,48 +180,51 @@ class Face:
         neg_z_hat = [0,0,-1]
         angle = np.arccos(np.clip(np.dot(self.n_hat, neg_z_hat), -1.0, 1.0))
         self.angle = angle
-        self.calculate_weight(self.angle, ground_level, ground_tolerance, phi_min=phi_min, no_update=no_weight_update)
-
+        self.grounded = False
+        return_value = None
+        
         # Check if angle is within problem threshold
         if angle >= 0 and angle < phi_min:
 
-            # Check if grounded
-            if self.check_grounded(ground_level, ground_tolerance) is True and ignore_grounded is False:
+            self.grounded = self.check_grounded(ground_level, ground_tolerance)
+            if self.grounded is True and ignore_grounded is False:  # Check if grounded
                 self.has_bad_angle = False
-                return False
-
-            # Check if inside tolerence
-            if np.abs(angle - phi_min) < angle_tolerance:
+                return_value = False
+                
+            elif (angle - phi_min)**2 < angle_tolerance**2:         # Check if inside tolerence
                 self.has_bad_angle = False
-                return False
-            
-            # If the angle is bad, and it is not on the ground, and is outside of tolerances, then mark it as a bad angle.
-            self.has_bad_angle = True
-            return True
-        
-        # The angle is outside of the problem threshold and should thus be marked as an accepted angle.
-        self.has_bad_angle = False
-        return False
+                return_value = False
 
-    def calculate_weight(self, angle, ground_level, ground_tolerance, phi_min = np.pi/4, no_update=True):
+            else:
+                # If the angle is bad, and it is not on the ground, and is outside of tolerances, then mark it as a bad angle.
+                self.has_bad_angle = True
+                return_value = True
+
+        else:
+            # The angle is outside of the problem threshold and should thus be marked as an accepted angle.
+            self.has_bad_angle = False
+            return_value = False
+
+        # Calculate weight
+        self.calculate_weight(phi_min=phi_min, no_update=no_weight_update)
+        return return_value
+
+    def calculate_weight(self, phi_min = np.pi/4, no_update=True):
 
         # Calculate area of projection onto XY plane
-        vector1 = self.vertices[1].get_array() - self.vertices[0].get_array()
-        vector2 = self.vertices[2].get_array() - self.vertices[0].get_array()
-        cross = np.cross([vector1[0], vector1[1], 0], [vector2[0], vector2[1], 0])
+        cross = np.cross([self.vector1[0], self.vector1[1], 0], [self.vector2[0], self.vector2[1], 0])
         area = np.linalg.norm(cross)/2
 
         weightPerArea = 0
-        if angle < 0.087:
+        if self.angle < 0.087:
             # 5 degrees or less: Considered as flat overhang. 
-            grounded = self.check_grounded(ground_level, ground_tolerance)
-            if grounded is False:
+            if self.grounded is False:
                 weightPerArea = 25
             else:
                 weightPerArea = -20 # Discount for flat surfaces touching the ground. Easier to remove from substrate.
-        elif angle < phi_min:
+        elif self.angle < phi_min:
             weightPerArea = 10
-        elif phi_min < angle and angle < (phi_min+0.087): # If the angle is just slightly (5 deg) above the limit
+        elif phi_min < self.angle and self.angle < (phi_min+0.087): # If the angle is just slightly (5 deg) above the limit
             weightPerArea = 5
         
         weight = weightPerArea * area

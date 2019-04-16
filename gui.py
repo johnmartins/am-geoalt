@@ -2,7 +2,7 @@ import wx
 import sys
 from handle_stl import search_and_solve
 from numpy import pi
-from os import getcwd
+from os import getcwd, path
 import threading
 
 class GeoAltThread(threading.Thread):
@@ -25,7 +25,7 @@ class GeoAltThread(threading.Thread):
         self.orientation = orientation
 
     def run(self):
-        search_and_solve(self._parent.input_file_f.GetValue(), 'fixed_models/architecture.stl', 
+        search_and_solve(self._parent.input_file_f.GetValue(), self._parent.output_file_f.GetValue(), 
         max_iterations=self.imax,
         overwrite_output=True, 
         phi_min=self.angle, 
@@ -67,12 +67,18 @@ class GeoAltGUI(wx.Frame):
         left_sizer = wx.GridBagSizer(hgap=0, vgap=0)
 
         # Input and output files
-        self.input_file_f = wx.TextCtrl(panel, size=(200,20))
-        left_sizer.Add(self.input_file_f, pos=(0,0), flag=wx.ALL, border=5)
+        self.input_file_f = wx.TextCtrl(panel, size=(400,25))
+        left_sizer.Add(self.input_file_f, pos=(0,0), span=(1,2), flag=wx.ALL, border=5)
 
         input_file_d = wx.Button(panel, label="Select STL-file")
         input_file_d.Bind(wx.EVT_BUTTON, self.on_open_file)
-        left_sizer.Add(input_file_d, pos=(0, 1), flag=wx.ALL, border=5)
+        left_sizer.Add(input_file_d, pos=(0, 3), flag=wx.ALL|wx.EXPAND, border=5)
+
+        self.output_file_f = wx.TextCtrl(panel, size=(400,25))
+        left_sizer.Add(self.output_file_f, pos=(1,0), span=(1,2), flag=wx.ALL, border=5)
+
+        output_file_d = wx.Button(panel, label="Set output path")
+        left_sizer.Add(output_file_d, pos=(1,3), flag=wx.ALL|wx.EXPAND, border=5)
 
         # Angle spinner
         ang_l = wx.StaticText(panel, label='Angle')
@@ -81,7 +87,7 @@ class GeoAltGUI(wx.Frame):
         self.ang_ct = wx.SpinCtrl(panel)
         self.ang_ct.SetRange(10,80)
         self.ang_ct.SetValue(45)
-        left_sizer.Add(self.ang_ct, pos=(2,1), span = (1, 2), flag = wx.EXPAND|wx.ALL, border = 5)
+        left_sizer.Add(self.ang_ct, pos=(2,1), span = (1, 2), flag = wx.ALL, border = 5)
 
         # Max iterations
         imax_l = wx.StaticText(panel, label='Max iterations')
@@ -89,7 +95,7 @@ class GeoAltGUI(wx.Frame):
         self.imax_ct = wx.SpinCtrl(panel)
         self.imax_ct.SetRange(0,2000)
         self.imax_ct.SetValue(0)
-        left_sizer.Add(self.imax_ct, pos=(3,1), span = (1,2), flag=wx.EXPAND|wx.ALL, border=5)
+        left_sizer.Add(self.imax_ct, pos=(3,1), span = (1,2), flag = wx.ALL, border=5)
         
         # Orientation
         or_l = wx.StaticText(panel, label='Orientation:')
@@ -107,7 +113,7 @@ class GeoAltGUI(wx.Frame):
         self.x_spin.SetValue(0)
         self.x_spin.Enable(False)
         left_sizer.Add(x_spin_l, pos=(6, 0), flag =wx.ALL, border=5)
-        left_sizer.Add(self.x_spin, pos=(6,1), span=(1,2), flag=wx.EXPAND|wx.ALL,border=5)
+        left_sizer.Add(self.x_spin, pos=(6,1), span=(1,2), flag=wx.ALL,border=5)
 
         y_spin_l = wx.StaticText(panel, label='Y rotation')
         self.y_spin = wx.SpinCtrl(panel)
@@ -115,7 +121,7 @@ class GeoAltGUI(wx.Frame):
         self.y_spin.SetValue(0)
         self.y_spin.Enable(False)
         left_sizer.Add(y_spin_l, pos=(7, 0), flag =wx.ALL, border=5)
-        left_sizer.Add(self.y_spin, pos=(7,1), span=(1,2), flag=wx.EXPAND|wx.ALL,border=5)
+        left_sizer.Add(self.y_spin, pos=(7,1), span=(1,2), flag=wx.ALL,border=5)
         
 
         # Bot buttons
@@ -185,6 +191,7 @@ class GeoAltGUI(wx.Frame):
         if fd.ShowModal() == wx.ID_OK:
             print("Selected %s" % fd.GetPath())
             self.input_file_f.SetValue(fd.GetPath())
+            self.output_file_f.SetValue(path.dirname(fd.GetPath()) + "\geoalt_" + path.basename(fd.GetPath()))
         else:
             print("AN ERROR OCCURED")
         
