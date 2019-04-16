@@ -3,6 +3,34 @@ import sys
 from handle_stl import search_and_solve
 from numpy import pi
 from os import getcwd
+import threading
+
+class GeoAltThread(threading.Thread):
+    def __init__(self, parent):
+        threading.Thread.__init__(self)
+        self._parent = parent
+
+        # Parameters
+        self.imax = 0
+        self.angle = angle = pi/4
+        self.orientation = None
+
+    def set_imax(self, imax):
+        self.imax = imax
+
+    def set_angle(self, angle):
+        self.angle = angle
+    
+    def set_orientation(self, orientation):
+        self.orientation = orientation
+
+    def run(self):
+        search_and_solve(self._parent.input_file_f.GetValue(), 'fixed_models/architecture.stl', 
+        max_iterations=self.imax,
+        overwrite_output=True, 
+        phi_min=self.angle, 
+        fixed_orientation=self.orientation,
+        plot=False)
 
 class StdoutRedirector(object):
     '''
@@ -36,7 +64,7 @@ class GeoAltGUI(wx.Frame):
         panel = wx.Panel(self) 
         hlayout = wx.BoxSizer()
     
-        left_sizer = wx.GridBagSizer(hgap=5, vgap=5)
+        left_sizer = wx.GridBagSizer(hgap=0, vgap=0)
 
         # Input and output files
         self.input_file_f = wx.TextCtrl(panel, size=(200,20))
@@ -135,12 +163,13 @@ class GeoAltGUI(wx.Frame):
             x_rot = self.x_spin.GetValue() * pi/180
             y_rot = self.y_spin.GetValue() * pi/180
             orientation = [x_rot, y_rot]
-
-        search_and_solve(self.input_file_f.GetValue(), 'fixed_models/architecture.stl', 
-        max_iterations=imax,
-        overwrite_output=True, 
-        phi_min=angle, 
-        fixed_orientation=orientation)
+        
+        # setup separate thread
+        worker = GeoAltThread(self)
+        worker.set_angle(angle)
+        worker.set_imax(imax)
+        worker.set_orientation(orientation)
+        worker.start()
 
     def on_open_file(self, event):
         """
