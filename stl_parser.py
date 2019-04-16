@@ -85,8 +85,6 @@ class STLfile:
         elif "COLOR" in type_str.upper():
             print("COLOR LOAD")
             return self.load_binary(color=True)
-        elif force_mode == "BINARY":
-            return self.load_binary()
 
         return self.load_binary()
 
