@@ -75,7 +75,7 @@ class GeoAltGUI(wx.Frame):
         y_spin_l = wx.StaticText(panel, label='Y rotation')
         self.y_spin = wx.SpinCtrl(panel)
         self.y_spin.SetRange(0,180)
-        self.y_spin.SetValue(180)
+        self.y_spin.SetValue(0)
         self.y_spin.Enable(False)
         left_sizer.Add(y_spin_l, pos=(5, 0), flag =wx.ALL, border=5)
         left_sizer.Add(self.y_spin, pos=(5,1), span=(1,2), flag=wx.EXPAND|wx.ALL,border=5)
