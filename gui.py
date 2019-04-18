@@ -78,6 +78,7 @@ class GeoAltGUI(wx.Frame):
         left_sizer.Add(self.output_file_f, pos=(1,0), span=(1,2), flag=wx.ALL, border=5)
 
         output_file_d = wx.Button(panel, label="Set output path")
+        output_file_d.Bind(wx.EVT_BUTTON, self.on_set_output)
         left_sizer.Add(output_file_d, pos=(1,3), flag=wx.ALL|wx.EXPAND, border=5)
 
         # Angle spinner
@@ -179,7 +180,7 @@ class GeoAltGUI(wx.Frame):
 
     def on_open_file(self, event):
         """
-        Create and show the Open FileDialog
+        Create and show the open file dialog
         """
         fd = wx.FileDialog(self,
         "Open STL file",
@@ -194,8 +195,22 @@ class GeoAltGUI(wx.Frame):
             self.output_file_f.SetValue(path.dirname(fd.GetPath()) + "\geoalt_" + path.basename(fd.GetPath()))
         else:
             print("AN ERROR OCCURED")
-        
 
+    def on_set_output(self, event):
+        """
+        Create and show save file dialog
+        """
+        fd = wx.FileDialog(self,
+        "Output STL file location",
+        ".",
+        "",
+        "STL files (*.stl)|*.stl",
+        wx.FD_SAVE|wx.FD_OVERWRITE_PROMPT)
+
+        if fd.ShowModal() == wx.ID_OK:
+            print("Selected output path: %s " % fd.GetPath())
+            self.output_file_f.SetValue(fd.GetPath())
+        
 
 app = wx.App() 
 GeoAltGUI(None, title = 'GeoAlt') 
