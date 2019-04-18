@@ -20,7 +20,7 @@ class FaceCollection:
         self.iterator_pointer = 0
         self.total_weight = 0
     
-    def append(self, face):
+    def append(self, face, ignore_edges=False):
         '''
         Add face to face collection
         '''
@@ -44,8 +44,9 @@ class FaceCollection:
         face.vertices[1].set_adjacency(face.vertices[2])
 
         self.faces.append(face)
-
-        face.set_edges(self.edge_collection)
+        
+        if ignore_edges is not True:
+            face.set_edges(self.edge_collection)
 
         return
     
