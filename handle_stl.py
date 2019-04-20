@@ -64,10 +64,10 @@ def check_paths(model_path, target_path, overwrite):
             raise geoexc.InvalidInputArgument("Invalid overwrite argument")
 
 def display_best_orientations(res, wei):
-    print("Optimal orientation:\t Xrot = %.2f,\t Yrot = %.2f,\t Weight = %.2f" % (res[wei[0],0], res[wei[0],1], res[wei[0],2]))
+    print("Optimal orientation:\t Xrot = %.2f,\t Yrot = %.2f,\t Weight = %.2f" % (res[wei[0],0]*180/np.pi, res[wei[0],1]*180/np.pi, res[wei[0],2]))
     for i in range(1,10):
         if len(res) > i:
-            print("Alternative %d:\t Xrot = %.2f,\t Yrot = %.2f,\t Weight = %.2f" % (i+1,res[wei[i],0], res[wei[i],1], res[wei[i],2]))
+            print("Alternative %d:\t Xrot = %.2f,\t Yrot = %.2f,\t Weight = %.2f" % (i+1,res[wei[i],0]*180/np.pi, res[wei[i],1]*180/np.pi, res[wei[i],2]))
         else:
             break
 
@@ -86,21 +86,27 @@ def orientation_optimization(stl, facecol, ignore_grounded, ground_level, ground
         
         # Rotate around X Axis
         stl.rotate(degx, axis='x')
+        angular_step_size = np.pi/180*5
+        degy = 0
 
         for j in range(0, iterations_per_axis):
+
             # Rotate around y axis
-            degy = np.pi/180*5*j
             stl.rotate(degy, axis='y')
             ground_level = stl.ground_level
             facecol.check_for_problems(ignore_grounded=ignore_grounded, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
-            optimization_results[(i*iterations_per_axis)+j] = [degx, degy, facecol.total_weight]
-            stl.rotate(-degy, axis='y')
+            optimization_results[(i*iterations_per_axis)+j] = [degx, angular_step_size*j, facecol.total_weight]
+            #print("%.2f\t%.2f\t%.2f" % (degx, angular_step_size*j, facecol.total_weight))
+            degy = angular_step_size
+        
+        # Reset y
+        stl.rotate(-1*angular_step_size*(iterations_per_axis-1), axis='y')
 
         # Reset rotation
         stl.rotate(-degx, axis='x')
 
         percentage_done = ((i+1)/iterations_per_axis) * 100
-        print("%.2f%% done" % percentage_done, end='\r', flush=True)
+        print("%.2f%%" % percentage_done, end='\r', flush=True)
 
     print("Done!", flush=True, end="\r")
 
@@ -128,7 +134,7 @@ def search_and_solve(model_path, altered_model_path,
     # Check if model exists
     check_paths(model_path, altered_model_path, overwrite_output)
 
-    time_model_info = timer()
+    time_start = timer()
     # Load the model into memory
     print("Loading the model..")
     stl = STLfile(model_path)
@@ -143,7 +149,7 @@ def search_and_solve(model_path, altered_model_path,
         if len(e.faces) != 2:
             print("POTENTIAL LEAK DETECTED! Bad Edge hash function, or leaking model")
 
-    time_face_collection = timer()
+    time_model_loaded = timer()
 
     # Optimize the model for the best possible orientation
     if fixed_orientation is not None:
@@ -162,9 +168,12 @@ def search_and_solve(model_path, altered_model_path,
         stl.rotate(fixed_orientation[1], axis='y')
         ground_level = stl.ground_level
 
+    time_orientation = timer()
+
     # Do initial problem check
     faces.check_for_problems(ignore_grounded=ignore_ground, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
     print("%d overhang surfaces detected" % faces.get_warning_count())
+
     time_problem_detection = timer()
 
     print("\nProblem correction process initiated. phi_min = %f \t Max iterations: %d. Convergence detection activated: %s. Convergence depth: %d" % (phi_min, max_iterations, convergence_break, convergence_depth))
@@ -211,8 +220,9 @@ def search_and_solve(model_path, altered_model_path,
     time_stl_creation = timer()
 
     print("\nPerformance:")
-    print("Gathered necessary vertex and face data in %.2f seconds" % (time_face_collection-time_model_info))
-    print("Processed problem detection in %.2f seconds" % (time_problem_detection-time_face_collection))
+    print("Parsed through the STL file in %.2f seconds" % (time_model_loaded-time_start))
+    print("Model orientation (optimizatin) completed in %.2f seconds" % (time_orientation-time_model_loaded))
+    print("Processed problem detection in %.2f seconds" % (time_problem_detection-time_orientation))
     print("Processed %d iterations of problem correction in %.2f seconds" % (iterations, time_problem_correction-time_problem_detection))
     print("Created a new STL file in %.2f seconds" % (time_stl_creation-time_problem_correction))
 

@@ -38,15 +38,17 @@ class Edge:
         self.faces = []
     
     def __eq__(self, other):
-        if self.vertex1.__eq__(other.vertex1) and self.vertex2.__eq__(other.vertex2):
+
+        if self.vertex1.index == other.vertex1.index and self.vertex2.index == other.vertex2.index:
             return True
-        if self.vertex2.__eq__(other.vertex1) and self.vertex1.__eq__(other.vertex2):
+        if self.vertex2.index == other.vertex1.index and self.vertex1.index == other.vertex2.index:
             return True
+
         return False
 
     def __hash__(self):
         # TODO: Optimize.
-        h = hash(self.vertex1.z() + self.vertex2.z())
+        h = hash(self.vertex1.z() + self.vertex2.z()) # Z coordinates don't change.
         return h
 
     def associate_with_face(self, face):

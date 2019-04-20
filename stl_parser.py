@@ -85,8 +85,6 @@ class STLfile:
         elif "COLOR" in type_str.upper():
             print("COLOR LOAD")
             return self.load_binary(color=True)
-        elif force_mode == "BINARY":
-            return self.load_binary()
 
         return self.load_binary()
 
@@ -101,7 +99,12 @@ class STLfile:
             f.read(80)
             self.header = "Colored solid."
         else:
-            self.header = f.read(80).decode('utf-8')
+            try:
+                self.header = f.read(80).decode('utf-8')
+            except UnicodeDecodeError:
+                f.close()
+                return self.load_binary(color=True)
+        
         face_count = int.from_bytes(f.read(4), byteorder='little', signed=False)
 
         for i in range(0,face_count):
