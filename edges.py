@@ -36,6 +36,14 @@ class Edge:
         self.vertex1 = vertex1
         self.vertex2 = vertex2
         self.faces = []
+        self.id = None
+        self.__set_id__()
+
+    def __set_id__(self):
+        if self.id is not None:
+            raise RuntimeError("Edge ran set_id twice")
+        else:
+            self.id = self.vertex1.z() + self.vertex2.z()
     
     def __eq__(self, other):
 
@@ -48,7 +56,7 @@ class Edge:
 
     def __hash__(self):
         # TODO: Optimize.
-        h = hash(self.vertex1.z() + self.vertex2.z()) # Z coordinates don't change.
+        h = hash(self.id) # Z coordinates don't change.
         return h
 
     def associate_with_face(self, face):

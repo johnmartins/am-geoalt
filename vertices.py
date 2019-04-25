@@ -40,11 +40,19 @@ class Vertex:
         self.facecol = facecol
         self.index = index
         self.change_set = []        # An array of changes proposed by the problem solver
+        self.id = None 
+        self.__set_id__()
         
         # These variables are responsible for a vertex "knowledge" of its surrounding vertices
         self.adjacencies = set()    # A set of all adjacent vertices
         self.is_pole = True         # True if all adjacent vertices are above this vertex.
 
+    def __set_id__(self):
+        if self.id is not None:
+            raise RuntimeError("set id ran twice for the same vertex.")
+        else:
+            self.id = self.x()+self.y()+self.z()
+        
     def x(self):
         return self.facecol.stlfile.vertices[self.index][0]
 
@@ -76,7 +84,7 @@ class Vertex:
             raise TypeError("Unknown eq method for Vertex class")
 
     def __hash__(self):
-        h = hash(self.x()+self.y()+self.z())
+        h = hash(self.id)
         return h
 
     def get_array(self):
