@@ -134,7 +134,7 @@ class GeoAltGUI(wx.Frame):
         # OUTPUT LAYOUT
         vlayout = wx.BoxSizer(orient=wx.VERTICAL)
 
-        self.out_tb = wx.TextCtrl(panel,style=wx.TE_MULTILINE, size=(500, 400)) 
+        self.out_tb = wx.TextCtrl(panel,style=wx.TE_MULTILINE, size=(600, 400)) 
         self.out_tb.AppendText("---STANDARD OUT---\n")
 
         vlayout.Add(self.out_tb, wx.EXPAND) 

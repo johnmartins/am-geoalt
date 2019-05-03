@@ -230,7 +230,7 @@ class Face:
                 weightPerArea = 100
             else:
                 weightPerArea = -80 # Discount for flat surfaces touching the ground. Easier to remove from substrate.
-                # TODO: Mark as grounded.
+                self.face_collection.stlfile.grounded = True    # Mark this orientation as grounded.
         elif self.angle < phi_min:
             weightPerArea = 63.74 - self.angle * 42.96      # Linear proportion. 1 deg overhang = 60 weight per area, 30 deg overhang = 30 weight per area
         elif phi_min < self.angle and self.angle < (np.pi/2 - 0.087): 

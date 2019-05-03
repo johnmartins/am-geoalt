@@ -64,10 +64,10 @@ def check_paths(model_path, target_path, overwrite):
             raise geoexc.InvalidInputArgument("Invalid overwrite argument")
 
 def display_best_orientations(res, wei):
-    print("Optimal orientation:\t Xrot = %.2f,\t Yrot = %.2f,\t Weight = %.2f" % (res[wei[0],0]*180/np.pi, res[wei[0],1]*180/np.pi, res[wei[0],2]))
+    print("Optimal orientation:\t Xrot = %.2f,\t Yrot = %.2f,\t Weight = %.2f. Grounded: %s" % (res[wei[0],0]*180/np.pi, res[wei[0],1]*180/np.pi, res[wei[0],2], 'yes' if res[wei[0],3] == 1 else 'no'))
     for i in range(1,10):
         if len(res) > i:
-            print("Alternative %d:\t Xrot = %.2f,\t Yrot = %.2f,\t Weight = %.2f" % (i+1,res[wei[i],0]*180/np.pi, res[wei[i],1]*180/np.pi, res[wei[i],2]))
+            print("Alternative %d:\t Xrot = %.2f,\t Yrot = %.2f,\t Weight = %.2f, Grounded: %s" % (i+1,res[wei[i],0]*180/np.pi, res[wei[i],1]*180/np.pi, res[wei[i],2], 'yes' if res[wei[i],3] == 1 else 'no'))
         else:
             break
 
@@ -79,7 +79,7 @@ def orientation_optimization(stl, facecol, ignore_grounded, ground_level, ground
     print("Performing orientation optimization..")
     # Find optimal orientation
     iterations_per_axis = 37
-    optimization_results = np.zeros([iterations_per_axis**2,3])
+    optimization_results = np.zeros([iterations_per_axis**2,4])
 
     for i in range(0, iterations_per_axis):
         degx = np.pi/180*5*i
@@ -95,8 +95,7 @@ def orientation_optimization(stl, facecol, ignore_grounded, ground_level, ground
             stl.rotate(degy, axis='y')
             ground_level = stl.ground_level
             facecol.check_for_problems(ignore_grounded=ignore_grounded, ground_level=ground_level, ground_tolerance=ground_tolerance, phi_min=phi_min, angle_tolerance=angle_tolerance)
-            optimization_results[(i*iterations_per_axis)+j] = [degx, angular_step_size*j, facecol.total_weight]
-            #print("%.2f\t%.2f\t%.2f" % (degx, angular_step_size*j, facecol.total_weight))
+            optimization_results[(i*iterations_per_axis)+j] = [degx, angular_step_size*j, facecol.total_weight, int(stl.grounded)]
             degy = angular_step_size
         
         # Reset y
