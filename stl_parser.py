@@ -152,7 +152,7 @@ class STLfile:
                     # Create new face
                     if "endsolid" in line:
                         # End of the file.
-                        print("END SOLID.")
+                        print("Reached end of solid.")
                         break
                     else:
                         search = re.search(r"facet\snormal\s+(\S+)\s+(\S+)\s+(\S+)", line)

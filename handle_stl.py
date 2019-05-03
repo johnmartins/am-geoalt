@@ -71,7 +71,7 @@ def display_best_orientations(res, wei):
         else:
             break
 
-def orientation_optimization(stl, facecol, ignore_grounded, ground_level, ground_tolerance, phi_min, angle_tolerance):
+def orientation_optimization(stl, facecol, ignore_grounded, ground_level, ground_tolerance, phi_min, angle_tolerance, grounded_only):
     '''
     This method is used to rotate the model into different orientations .
     This is done to aid in finding the orientation most suitable for printing
@@ -109,6 +109,16 @@ def orientation_optimization(stl, facecol, ignore_grounded, ground_level, ground
 
     print("Done!", flush=True, end="\r")
 
+    if grounded_only is True:
+        count = np.count_nonzero(optimization_results[:,3])
+        grounded_results = np.zeros([count,4])
+        j = 0
+        for i in range(0, len(optimization_results)):
+            if optimization_results[i,3] == 1:
+                grounded_results[j,:] = optimization_results[i,:]
+                j += 1
+        optimization_results = grounded_results
+                
     weights = optimization_results[:,2]
     weights_ordered_indices = np.argsort(weights)
     display_best_orientations(optimization_results, weights_ordered_indices)
@@ -128,7 +138,8 @@ def search_and_solve(model_path, altered_model_path,
     overwrite_output = False,   # Overwrite target output file if it already exists
     zero_phi_strategy = ZeroPhiStrategy.NONE,   # Strategy for dealing with flat overhangs
     fixed_orientation = None,   # Pre-specified orientation
-    ignore_rot_opt = False):    # Skip orientation optimization (rotation optimization) step
+    ignore_rot_opt = False,
+    grounded_only = False):    # Skip orientation optimization (rotation optimization) step
 
     # Check if model exists
     check_paths(model_path, altered_model_path, overwrite_output)
@@ -160,7 +171,8 @@ def search_and_solve(model_path, altered_model_path,
             ground_level=ground_level, 
             ground_tolerance=ground_tolerance, 
             phi_min=phi_min, 
-            angle_tolerance=angle_tolerance)
+            angle_tolerance=angle_tolerance,
+            grounded_only=grounded_only)
         ground_level = stl.ground_level
     elif fixed_orientation is not None:
         stl.rotate(fixed_orientation[0], axis='x')
