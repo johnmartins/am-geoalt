@@ -216,17 +216,25 @@ class Face:
         cross = np.cross([self.vector1[0], self.vector1[1], 0], [self.vector2[0], self.vector2[1], 0])
         area = np.linalg.norm(cross)/2
 
+        # Calculate constants:
+        m_heavy = 63.74
+        k_heavy = 42.96
+
+        m_light = 21.23
+        k_light = 14.3
+
         weightPerArea = 0
         if self.angle < 0.087:
             # 5 degrees or less: Considered as flat overhang. 
             if self.grounded is False:
-                weightPerArea = 25
+                weightPerArea = 100
             else:
-                weightPerArea = -20 # Discount for flat surfaces touching the ground. Easier to remove from substrate.
+                weightPerArea = -80 # Discount for flat surfaces touching the ground. Easier to remove from substrate.
+                self.face_collection.stlfile.grounded = True    # Mark this orientation as grounded.
         elif self.angle < phi_min:
-            weightPerArea = 10
-        elif phi_min < self.angle and self.angle < (phi_min+0.087): # If the angle is just slightly (5 deg) above the limit
-            weightPerArea = 5
+            weightPerArea = 63.74 - self.angle * 42.96      # Linear proportion. 1 deg overhang = 60 weight per area, 30 deg overhang = 30 weight per area
+        elif phi_min < self.angle and self.angle < (np.pi/2 - 0.087): 
+            weightPerArea = 21.23 - self.angle * 14.3       # Linear proportion. 45 deg overhang = 10 wpa, 89 deg overhang = 0 wpa
         
         weight = weightPerArea * area
         

@@ -13,11 +13,14 @@ class STLfile:
         self.vertices = []
         self.normals = []
         self.ground_level = 0
+        self.grounded = False       # This variable is set by the external "Face" class.
 
     def rotate(self, theta, axis):
         '''
         Rotate the model around the X, Y or Z axis. The results are immediately stored.
         '''
+        self.grounded = False # Rotating the model could cause the model to no longer be grounded.
+
         b = np.array(self.vertices).T
 
         if axis.lower() == "x":
@@ -149,7 +152,7 @@ class STLfile:
                     # Create new face
                     if "endsolid" in line:
                         # End of the file.
-                        print("END SOLID.")
+                        print("Reached end of solid.")
                         break
                     else:
                         search = re.search(r"facet\snormal\s+(\S+)\s+(\S+)\s+(\S+)", line)

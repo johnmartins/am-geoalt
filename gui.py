@@ -14,6 +14,7 @@ class GeoAltThread(threading.Thread):
         self.imax = 0
         self.angle = angle = pi/4
         self.orientation = None
+        self.grounded_only = False
 
     def set_imax(self, imax):
         self.imax = imax
@@ -24,13 +25,17 @@ class GeoAltThread(threading.Thread):
     def set_orientation(self, orientation):
         self.orientation = orientation
 
+    def set_grounded_only(self, grounded_only):
+        self.grounded_only = grounded_only
+
     def run(self):
         search_and_solve(self._parent.input_file_f.GetValue(), self._parent.output_file_f.GetValue(), 
         max_iterations=self.imax,
         overwrite_output=True, 
         phi_min=self.angle, 
         fixed_orientation=self.orientation,
-        plot=False)
+        plot=False,
+        grounded_only=self.grounded_only)
 
 class StdoutRedirector(object):
     '''
@@ -107,34 +112,38 @@ class GeoAltGUI(wx.Frame):
         self.opt_or.SetValue(wx.CHK_CHECKED)
         self.Bind(wx.EVT_CHECKBOX, self.on_toggle_orientation_optimization, self.opt_or)
 
+        self.grounded_only = wx.CheckBox(panel, label="Grounded results only")
+        left_sizer.Add(self.grounded_only, pos=(6,0), span=(1,2), flag=wx.ALL, border=5)
+        self.grounded_only.SetValue(wx.CHK_CHECKED)
+        self.Bind(wx.EVT_CHECKBOX, self.on_toggle_grounded_only, self.grounded_only)
 
         x_spin_l = wx.StaticText(panel, label='X rotation')
         self.x_spin = wx.SpinCtrl(panel)
         self.x_spin.SetRange(0,180)
         self.x_spin.SetValue(0)
         self.x_spin.Enable(False)
-        left_sizer.Add(x_spin_l, pos=(6, 0), flag =wx.ALL, border=5)
-        left_sizer.Add(self.x_spin, pos=(6,1), span=(1,2), flag=wx.ALL,border=5)
+        left_sizer.Add(x_spin_l, pos=(7, 0), flag =wx.ALL, border=5)
+        left_sizer.Add(self.x_spin, pos=(7,1), span=(1,2), flag=wx.ALL,border=5)
 
         y_spin_l = wx.StaticText(panel, label='Y rotation')
         self.y_spin = wx.SpinCtrl(panel)
         self.y_spin.SetRange(0,180)
         self.y_spin.SetValue(0)
         self.y_spin.Enable(False)
-        left_sizer.Add(y_spin_l, pos=(7, 0), flag =wx.ALL, border=5)
-        left_sizer.Add(self.y_spin, pos=(7,1), span=(1,2), flag=wx.ALL,border=5)
+        left_sizer.Add(y_spin_l, pos=(8, 0), flag =wx.ALL, border=5)
+        left_sizer.Add(self.y_spin, pos=(8,1), span=(1,2), flag=wx.ALL,border=5)
         
 
         # Bot buttons
         exec_btn = wx.Button(panel, label = "Run")
         self.Bind(wx.EVT_BUTTON, self.exec_geoalt, exec_btn) 
 
-        left_sizer.Add(exec_btn, pos = (11, 0),flag = wx.ALL, border = 5) 
+        left_sizer.Add(exec_btn, pos = (12, 0),flag = wx.ALL, border = 5) 
 
         # OUTPUT LAYOUT
         vlayout = wx.BoxSizer(orient=wx.VERTICAL)
 
-        self.out_tb = wx.TextCtrl(panel,style=wx.TE_MULTILINE, size=(500, 400)) 
+        self.out_tb = wx.TextCtrl(panel,style=wx.TE_MULTILINE, size=(600, 400)) 
         self.out_tb.AppendText("---STANDARD OUT---\n")
 
         vlayout.Add(self.out_tb, wx.EXPAND) 
@@ -152,14 +161,20 @@ class GeoAltGUI(wx.Frame):
         if self.x_spin.IsEnabled():
             self.x_spin.Enable(False)
             self.y_spin.Enable(False)
+            self.grounded_only.Enable(True)
         else:
             self.x_spin.Enable(True)
             self.y_spin.Enable(True)
+            self.grounded_only.Enable(False)
+
+    def on_toggle_grounded_only(self, event):
+        print("Toggled grounded only.")
 
     def exec_geoalt(self, event):
         self.out_tb.SetValue("")
         angle = int(self.ang_ct.GetValue())*pi/180
         imax = int(self.imax_ct.GetValue())
+        grounded_only = bool(self.grounded_only.GetValue())
         
         # Orientation
         optimize_orientation = bool(self.opt_or.GetValue())
@@ -176,6 +191,7 @@ class GeoAltGUI(wx.Frame):
         worker.set_angle(angle)
         worker.set_imax(imax)
         worker.set_orientation(orientation)
+        worker.set_grounded_only(grounded_only)
         worker.start()
 
     def on_open_file(self, event):
