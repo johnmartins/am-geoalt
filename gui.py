@@ -15,6 +15,8 @@ class GeoAltThread(threading.Thread):
         self.angle = angle = pi/4
         self.orientation = None
         self.grounded_only = False
+        self.angle_tolerance = 0.017
+        self.ground_tolerance = 0.01
 
     def set_imax(self, imax):
         self.imax = imax
@@ -28,6 +30,12 @@ class GeoAltThread(threading.Thread):
     def set_grounded_only(self, grounded_only):
         self.grounded_only = grounded_only
 
+    def set_ground_tolerance(self, ground_tol):
+        self.ground_tolerance = ground_tol
+
+    def set_angle_tolerance(self, angle_tol):
+        self.angle_tolerance = angle_tol
+
     def run(self):
         search_and_solve(self._parent.input_file_f.GetValue(), self._parent.output_file_f.GetValue(), 
         max_iterations=self.imax,
@@ -35,7 +43,9 @@ class GeoAltThread(threading.Thread):
         phi_min=self.angle, 
         fixed_orientation=self.orientation,
         plot=False,
-        grounded_only=self.grounded_only)
+        grounded_only=self.grounded_only,
+        ground_tolerance=self.ground_tolerance,
+        angle_tolerance=self.angle_tolerance)
 
 class StdoutRedirector(object):
     '''
@@ -58,7 +68,7 @@ class StdoutRedirector(object):
 class GeoAltGUI(wx.Frame): 
    
     def __init__(self, parent, title): 
-        super(GeoAltGUI, self).__init__(parent, title = title) 
+        super(GeoAltGUI, self).__init__(parent, title = title, style=wx.SYSTEM_MENU | wx.SYSTEM_MENU | wx.CAPTION | wx.CLOSE_BOX) 
              
         self.InitUI() 
         self.Centre() 
@@ -72,28 +82,28 @@ class GeoAltGUI(wx.Frame):
         left_sizer = wx.GridBagSizer(hgap=0, vgap=0)
 
         # Input and output files
-        self.input_file_f = wx.TextCtrl(panel, size=(400,25))
-        left_sizer.Add(self.input_file_f, pos=(0,0), span=(1,2), flag=wx.ALL, border=5)
+        self.input_file_f = wx.TextCtrl(panel, size=(300,25))
+        left_sizer.Add(self.input_file_f, pos=(0,0), span=(1,3), flag=wx.ALL, border=5)
 
         input_file_d = wx.Button(panel, label="Select STL-file")
         input_file_d.Bind(wx.EVT_BUTTON, self.on_open_file)
         left_sizer.Add(input_file_d, pos=(0, 3), flag=wx.ALL|wx.EXPAND, border=5)
 
-        self.output_file_f = wx.TextCtrl(panel, size=(400,25))
-        left_sizer.Add(self.output_file_f, pos=(1,0), span=(1,2), flag=wx.ALL, border=5)
+        self.output_file_f = wx.TextCtrl(panel, size=(300,25))
+        left_sizer.Add(self.output_file_f, pos=(1,0), span=(1,3), flag=wx.ALL, border=5)
 
         output_file_d = wx.Button(panel, label="Set output path")
         output_file_d.Bind(wx.EVT_BUTTON, self.on_set_output)
         left_sizer.Add(output_file_d, pos=(1,3), flag=wx.ALL|wx.EXPAND, border=5)
 
         # Angle spinner
-        ang_l = wx.StaticText(panel, label='Angle')
+        ang_l = wx.StaticText(panel, label='Min Overhang')
         left_sizer.Add(ang_l, pos=(2, 0), flag =wx.ALL, border=5)
 
         self.ang_ct = wx.SpinCtrl(panel)
         self.ang_ct.SetRange(10,80)
         self.ang_ct.SetValue(45)
-        left_sizer.Add(self.ang_ct, pos=(2,1), span = (1, 2), flag = wx.ALL, border = 5)
+        left_sizer.Add(self.ang_ct, pos=(2,1), span = (1, 1), flag = wx.ALL, border = 5)
 
         # Max iterations
         imax_l = wx.StaticText(panel, label='Max iterations')
@@ -101,7 +111,7 @@ class GeoAltGUI(wx.Frame):
         self.imax_ct = wx.SpinCtrl(panel)
         self.imax_ct.SetRange(0,2000)
         self.imax_ct.SetValue(0)
-        left_sizer.Add(self.imax_ct, pos=(3,1), span = (1,2), flag = wx.ALL, border=5)
+        left_sizer.Add(self.imax_ct, pos=(3,1), span = (1,1), flag = wx.ALL, border=5)
         
         # Orientation
         or_l = wx.StaticText(panel, label='Orientation:')
@@ -132,6 +142,25 @@ class GeoAltGUI(wx.Frame):
         self.y_spin.Enable(False)
         left_sizer.Add(y_spin_l, pos=(8, 0), flag =wx.ALL, border=5)
         left_sizer.Add(self.y_spin, pos=(8,1), span=(1,2), flag=wx.ALL,border=5)
+
+        tolerances_txt = wx.StaticText(panel, label='Tolerances:')
+        left_sizer.Add(tolerances_txt, pos=(9,0), flag=wx.ALL,border=5)
+
+        grould_lbl = wx.StaticText(panel, label='Ground')
+        left_sizer.Add(grould_lbl, pos=(10, 0), border=5, flag=wx.ALL)
+        self.ground_ctrl = wx.SpinCtrlDouble(panel)
+        self.ground_ctrl.SetRange(0.001,1)
+        self.ground_ctrl.SetValue(0.01)
+        self.ground_ctrl.SetIncrement(0.001)
+        left_sizer.Add(self.ground_ctrl, pos=(10,1), span = (1, 2), border = 5, flag=wx.ALL)
+
+        angle_tol_lbl = wx.StaticText(panel, label='Angle')
+        left_sizer.Add(angle_tol_lbl, pos=(11,0), border=5, flag=wx.ALL)
+        self.angle_tol_ctrl = wx.SpinCtrlDouble(panel)
+        self.angle_tol_ctrl.SetRange(0.001,1)
+        self.angle_tol_ctrl.SetValue(0.017)
+        self.angle_tol_ctrl.SetIncrement(0.001)
+        left_sizer.Add(self.angle_tol_ctrl, pos=(11,1), span = (1,2), border = 5, flag=wx.ALL)
         
 
         # Bot buttons
@@ -175,6 +204,8 @@ class GeoAltGUI(wx.Frame):
         angle = int(self.ang_ct.GetValue())*pi/180
         imax = int(self.imax_ct.GetValue())
         grounded_only = bool(self.grounded_only.GetValue())
+        tol_ground = float(self.ground_ctrl.GetValue())
+        tol_angle = float(self.angle_tol_ctrl.GetValue())
         
         # Orientation
         optimize_orientation = bool(self.opt_or.GetValue())
@@ -192,6 +223,8 @@ class GeoAltGUI(wx.Frame):
         worker.set_imax(imax)
         worker.set_orientation(orientation)
         worker.set_grounded_only(grounded_only)
+        worker.set_ground_tolerance(tol_ground)
+        worker.set_angle_tolerance(tol_angle)
         worker.start()
 
     def on_open_file(self, event):
@@ -208,7 +241,9 @@ class GeoAltGUI(wx.Frame):
         if fd.ShowModal() == wx.ID_OK:
             print("Selected %s" % fd.GetPath())
             self.input_file_f.SetValue(fd.GetPath())
+            self.input_file_f.SetInsertionPointEnd()    # Move cursor in text field to end
             self.output_file_f.SetValue(path.dirname(fd.GetPath()) + "\geoalt_" + path.basename(fd.GetPath()))
+            self.output_file_f.SetInsertionPointEnd()   # Move cursor in text field to end
         else:
             print("AN ERROR OCCURED")
 
