@@ -4,6 +4,7 @@ from handle_stl import search_and_solve
 from numpy import pi
 from os import getcwd, path
 import threading
+from zero_phi_strategy import ZeroPhiStrategy
 
 class GeoAltThread(threading.Thread):
     def __init__(self, parent):
@@ -17,6 +18,7 @@ class GeoAltThread(threading.Thread):
         self.grounded_only = False
         self.angle_tolerance = 0.017
         self.ground_tolerance = 0.01
+        self.zero_phi_strategy = ZeroPhiStrategy.NONE
 
     def set_imax(self, imax):
         self.imax = imax
@@ -36,6 +38,9 @@ class GeoAltThread(threading.Thread):
     def set_angle_tolerance(self, angle_tol):
         self.angle_tolerance = angle_tol
 
+    def set_zero_phi_strategy(self, zps):
+        self.zero_phi_strategy = zps
+
     def run(self):
         search_and_solve(self._parent.input_file_f.GetValue(), self._parent.output_file_f.GetValue(), 
         max_iterations=self.imax,
@@ -45,7 +50,8 @@ class GeoAltThread(threading.Thread):
         plot=False,
         grounded_only=self.grounded_only,
         ground_tolerance=self.ground_tolerance,
-        angle_tolerance=self.angle_tolerance)
+        angle_tolerance=self.angle_tolerance,
+        zero_phi_strategy=self.zero_phi_strategy)
 
 class StdoutRedirector(object):
     '''
@@ -105,25 +111,34 @@ class GeoAltGUI(wx.Frame):
         self.ang_ct.SetValue(45)
         left_sizer.Add(self.ang_ct, pos=(2,1), span = (1, 1), flag = wx.ALL, border = 5)
 
+        geoalt_lbl = wx.StaticText(panel, label='Geometric alteration:')
+        left_sizer.Add(geoalt_lbl, pos=(3,0), flag=wx.ALL, border=5)
+
         # Max iterations
         imax_l = wx.StaticText(panel, label='Max iterations')
-        left_sizer.Add(imax_l, pos=(3,0), flag=wx.ALL,border=5)
+        left_sizer.Add(imax_l, pos=(4,0), flag=wx.ALL,border=5)
         self.imax_ct = wx.SpinCtrl(panel)
         self.imax_ct.SetRange(0,2000)
         self.imax_ct.SetValue(0)
-        left_sizer.Add(self.imax_ct, pos=(3,1), span = (1,1), flag = wx.ALL, border=5)
+        left_sizer.Add(self.imax_ct, pos=(4,1), span = (1,1), flag = wx.ALL, border=5)
+
+        zps_lbl = wx.StaticText(panel, label='0 phi strategy')
+        left_sizer.Add(zps_lbl, pos=(5,0), flag=wx.ALL, border=5)
+        self.zps_choice = wx.Choice(panel, choices=['None', 'Inject'])
+        self.zps_choice.SetSelection(0)
+        left_sizer.Add(self.zps_choice,pos=(5,1), span=(1,1), flag=wx.ALL, border=5)
         
         # Orientation
         or_l = wx.StaticText(panel, label='Orientation:')
-        left_sizer.Add(or_l, pos=(4,0), flag=wx.ALL, border=5)
+        left_sizer.Add(or_l, pos=(6,0), flag=wx.ALL, border=5)
 
         self.opt_or = wx.CheckBox(panel, label="Analyze optimal orientation")
-        left_sizer.Add(self.opt_or, pos=(5,0), span=(1,2), flag=wx.ALL, border=5)
+        left_sizer.Add(self.opt_or, pos=(7,0), span=(1,2), flag=wx.ALL, border=5)
         self.opt_or.SetValue(wx.CHK_CHECKED)
         self.Bind(wx.EVT_CHECKBOX, self.on_toggle_orientation_optimization, self.opt_or)
 
         self.grounded_only = wx.CheckBox(panel, label="Grounded results only")
-        left_sizer.Add(self.grounded_only, pos=(6,0), span=(1,2), flag=wx.ALL, border=5)
+        left_sizer.Add(self.grounded_only, pos=(8,0), span=(1,2), flag=wx.ALL, border=5)
         self.grounded_only.SetValue(wx.CHK_CHECKED)
         self.Bind(wx.EVT_CHECKBOX, self.on_toggle_grounded_only, self.grounded_only)
 
@@ -132,47 +147,47 @@ class GeoAltGUI(wx.Frame):
         self.x_spin.SetRange(0,180)
         self.x_spin.SetValue(0)
         self.x_spin.Enable(False)
-        left_sizer.Add(x_spin_l, pos=(7, 0), flag =wx.ALL, border=5)
-        left_sizer.Add(self.x_spin, pos=(7,1), span=(1,2), flag=wx.ALL,border=5)
+        left_sizer.Add(x_spin_l, pos=(9, 0), flag =wx.ALL, border=5)
+        left_sizer.Add(self.x_spin, pos=(9,1), span=(1,2), flag=wx.ALL,border=5)
 
         y_spin_l = wx.StaticText(panel, label='Y rotation')
         self.y_spin = wx.SpinCtrl(panel)
         self.y_spin.SetRange(0,180)
         self.y_spin.SetValue(0)
         self.y_spin.Enable(False)
-        left_sizer.Add(y_spin_l, pos=(8, 0), flag =wx.ALL, border=5)
-        left_sizer.Add(self.y_spin, pos=(8,1), span=(1,2), flag=wx.ALL,border=5)
+        left_sizer.Add(y_spin_l, pos=(10, 0), flag =wx.ALL, border=5)
+        left_sizer.Add(self.y_spin, pos=(10,1), span=(1,2), flag=wx.ALL,border=5)
 
         tolerances_txt = wx.StaticText(panel, label='Tolerances:')
-        left_sizer.Add(tolerances_txt, pos=(9,0), flag=wx.ALL,border=5)
+        left_sizer.Add(tolerances_txt, pos=(11,0), flag=wx.ALL,border=5)
 
         grould_lbl = wx.StaticText(panel, label='Ground')
-        left_sizer.Add(grould_lbl, pos=(10, 0), border=5, flag=wx.ALL)
+        left_sizer.Add(grould_lbl, pos=(12, 0), border=5, flag=wx.ALL)
         self.ground_ctrl = wx.SpinCtrlDouble(panel)
         self.ground_ctrl.SetRange(0.001,1)
         self.ground_ctrl.SetValue(0.01)
         self.ground_ctrl.SetIncrement(0.001)
-        left_sizer.Add(self.ground_ctrl, pos=(10,1), span = (1, 2), border = 5, flag=wx.ALL)
+        left_sizer.Add(self.ground_ctrl, pos=(12,1), span = (1, 2), border = 5, flag=wx.ALL)
 
         angle_tol_lbl = wx.StaticText(panel, label='Angle')
-        left_sizer.Add(angle_tol_lbl, pos=(11,0), border=5, flag=wx.ALL)
+        left_sizer.Add(angle_tol_lbl, pos=(13,0), border=5, flag=wx.ALL)
         self.angle_tol_ctrl = wx.SpinCtrlDouble(panel)
         self.angle_tol_ctrl.SetRange(0.001,1)
         self.angle_tol_ctrl.SetValue(0.017)
         self.angle_tol_ctrl.SetIncrement(0.001)
-        left_sizer.Add(self.angle_tol_ctrl, pos=(11,1), span = (1,2), border = 5, flag=wx.ALL)
+        left_sizer.Add(self.angle_tol_ctrl, pos=(13,1), span = (1,2), border = 5, flag=wx.ALL)
         
 
         # Bot buttons
         exec_btn = wx.Button(panel, label = "Run")
         self.Bind(wx.EVT_BUTTON, self.exec_geoalt, exec_btn) 
 
-        left_sizer.Add(exec_btn, pos = (12, 0),flag = wx.ALL, border = 5) 
+        left_sizer.Add(exec_btn, pos = (14, 0),flag = wx.ALL, border = 5) 
 
         # OUTPUT LAYOUT
         vlayout = wx.BoxSizer(orient=wx.VERTICAL)
 
-        self.out_tb = wx.TextCtrl(panel,style=wx.TE_MULTILINE, size=(600, 400)) 
+        self.out_tb = wx.TextCtrl(panel,style=wx.TE_MULTILINE, size=(600, 460)) 
         self.out_tb.AppendText("---STANDARD OUT---\n")
 
         vlayout.Add(self.out_tb, wx.EXPAND) 
@@ -206,6 +221,15 @@ class GeoAltGUI(wx.Frame):
         grounded_only = bool(self.grounded_only.GetValue())
         tol_ground = float(self.ground_ctrl.GetValue())
         tol_angle = float(self.angle_tol_ctrl.GetValue())
+        zps = None
+
+        if self.zps_choice.GetSelection() == 0:
+            zps = ZeroPhiStrategy.NONE
+        elif self.zps_choice.GetSelection() == 1:
+            zps = ZeroPhiStrategy.INJECT
+        else:
+            raise ValueError("An error occured when setting the zero phi strategy. Please report.")
+
         
         # Orientation
         optimize_orientation = bool(self.opt_or.GetValue())
@@ -225,6 +249,7 @@ class GeoAltGUI(wx.Frame):
         worker.set_grounded_only(grounded_only)
         worker.set_ground_tolerance(tol_ground)
         worker.set_angle_tolerance(tol_angle)
+        worker.set_zero_phi_strategy(zps)
         worker.start()
 
     def on_open_file(self, event):

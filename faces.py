@@ -154,7 +154,6 @@ class Face:
 
     def get_top_z(self):
         z_array = np.array(self.get_vertices_as_arrays())[:,2]
-        print(z_array)
         return z_array[np.argsort(z_array)[2]]
 
     def refresh_normal_vector(self):
