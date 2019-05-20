@@ -187,7 +187,7 @@ def search_and_solve(model_path, altered_model_path,
 
     time_problem_detection = timer()
 
-    print("\nProblem correction process initiated. phi_min = %f \t Max iterations: %d. Convergence detection activated: %s. Convergence depth: %d" % (phi_min, max_iterations, convergence_break, convergence_depth))
+    print("\nProblem correction process initiated. phi_min = %f \nMax iterations: %d. \nConvergence detection activated: %s. Convergence depth: %d" % (phi_min, max_iterations, convergence_break, convergence_depth))
     iterations = 0
     previous_warning_count = []
     for i in range(0, max_iterations):
