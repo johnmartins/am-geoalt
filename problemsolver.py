@@ -1,4 +1,4 @@
-from faces import Face
+from geoalt_geometry.faces import Face
 import numpy as np
 import math
 from zero_phi_strategy import ZeroPhiStrategy, inject

@@ -1,7 +1,7 @@
 import numpy as np
 
-from vertices import Vertex, VertexCollection
-from edges import Edge, EdgeCollection
+from geoalt_geometry.vertices import Vertex, VertexCollection
+from geoalt_geometry.edges import Edge, EdgeCollection
 from timeit import default_timer as timer
 
 class FaceCollection:

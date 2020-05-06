@@ -1,2 +1,0 @@
-numpy-stl 2.9.0
-https://github.com/Septaris/mesh_vox

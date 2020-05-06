@@ -1,6 +1,6 @@
 import sys
 import argparse
-from handle_stl import search_and_solve
+from geoalt_stl.handle_stl import search_and_solve
 import geoalt_exceptions as geoexc
 from zero_phi_strategy import ZeroPhiStrategy
 

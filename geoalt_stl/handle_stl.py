@@ -8,12 +8,15 @@ from mpl_toolkits.mplot3d import Axes3D
 import ntpath
 import os
 
-from faces import Face, FaceCollection
+from geoalt_geometry.faces import FaceCollection
+
 from problemsolver import single_face_algorithm
-from stl_creator import STLCreator
 import geoalt_exceptions as geoexc
 from zero_phi_strategy import ZeroPhiStrategy
-from stl_parser import STLfile
+
+from geoalt_stl.stl_creator import STLCreator
+from geoalt_stl.stl_parser import STLfile
+
 
 def print_stl_information(stl):
     print("Model information:")

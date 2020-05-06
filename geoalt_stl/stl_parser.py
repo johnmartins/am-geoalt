@@ -1,10 +1,11 @@
 import re
-from faces import Face, FaceCollection
-from vertices import Vertex
 from timeit import default_timer as timer
 import numpy as np
-from stl_creator import STLCreator
 from struct import unpack
+
+from geoalt_geometry.faces import Face, FaceCollection
+from geoalt_geometry.vertices import Vertex
+from geoalt_stl.stl_creator import STLCreator
 
 class STLfile:
     def __init__(self, filename):

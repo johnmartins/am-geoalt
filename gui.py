@@ -1,6 +1,6 @@
 import wx
 import sys
-from handle_stl import search_and_solve
+from geoalt_stl.handle_stl import search_and_solve
 from numpy import pi
 from os import getcwd, path
 import threading
