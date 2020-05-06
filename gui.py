@@ -1,10 +1,12 @@
 import wx
 import sys
-from geoalt_stl.handle_stl import search_and_solve
+import threading
+
 from numpy import pi
 from os import getcwd, path
-import threading
-from zero_phi_strategy import ZeroPhiStrategy
+
+from geoalt_algorithms.zero_phi_strategy import ZeroPhiStrategy
+from geoalt_stl.handle_stl import search_and_solve
 
 class GeoAltThread(threading.Thread):
     def __init__(self, parent):

@@ -9,13 +9,11 @@ import ntpath
 import os
 
 from geoalt_geometry.faces import FaceCollection
-
-from problemsolver import single_face_algorithm
-import geoalt_exceptions as geoexc
-from zero_phi_strategy import ZeroPhiStrategy
-
+from geoalt_algorithms.problemsolver import single_face_algorithm
+from geoalt_algorithms.zero_phi_strategy import ZeroPhiStrategy
 from geoalt_stl.stl_creator import STLCreator
 from geoalt_stl.stl_parser import STLfile
+import geoalt_exceptions.exceptions as geoexc
 
 
 def print_stl_information(stl):
