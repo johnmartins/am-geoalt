@@ -1,6 +1,6 @@
 import sys
 import argparse
-from geoalt_stl.handle_stl import search_and_solve
+from geoalt_algorithms.initiator import search_and_solve
 import geoalt_exceptions.exceptions as geoexc
 from geoalt_algorithms.zero_phi_strategy import ZeroPhiStrategy
 
@@ -22,7 +22,7 @@ parser.add_argument("-or", "--orientation", type=float, nargs="+", help="Provide
 args = parser.parse_args()
 
 # Default parameter values
-max_iterations = 0       # Should be high enough to handle most reasonably complex models
+max_iterations = 0          # Max iterations of the single face algorithm that all faces pass through
 ignore_ground = False       # Treat lowest known occupied Z-coordinate as ground
 phi_min = 3.1415/4          # The minimum allowed overhang angle
 plot = False                # Plot the model using matplotlib when the process is done
