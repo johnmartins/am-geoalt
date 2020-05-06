@@ -4,7 +4,7 @@ To install all necessary modules, run `pip install -r requirements.txt`.
 To use the GUI you need wxPython. The installation of wxPython on windows is no different than the usual (`pip install -U wxPython`), but for linux you might have to do some research. 
 
 # Using the GUI
-To start the GUI run `python3 gui.py`. The wxPython module is required for the GUI to run properly.
+To start the GUI run `python3 gui.py`. The wxPython (https://wxpython.org/) module is required for the GUI to run properly.
 
 The GUI is by default setup for orientation optimization. 
 
