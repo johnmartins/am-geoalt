@@ -4,9 +4,9 @@ To install all necessary modules, run `pip install -r requirements.txt`.
 To use the GUI you need wxPython. The installation of wxPython on windows is no different than the usual (`pip install -U wxPython`), but for linux you might have to do some research. 
 
 # Using the GUI
-The GUI is by default setup for orientation optimization. 
+To start the GUI run `python3 gui.py`. The wxPython module is required for the GUI to run properly.
 
-To start the GUI run `python3 gui.py`
+The GUI is by default setup for orientation optimization. 
 
 To run the geometry alteration algorithm, set max iterations > 0 (eg. 1000). Then choose if you want to use orientation optimization or not (note that orientation optimization is very time consuming). To disable orientation optimization uncheck the checkbox "analyze optimal orientation".
 
