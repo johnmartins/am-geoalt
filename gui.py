@@ -6,7 +6,7 @@ from numpy import pi
 from os import getcwd, path
 
 from geoalt_algorithms.zero_phi_strategy import ZeroPhiStrategy
-from geoalt_stl.handle_stl import search_and_solve
+from geoalt_algorithms.initiator import search_and_solve
 
 class GeoAltThread(threading.Thread):
     def __init__(self, parent):
