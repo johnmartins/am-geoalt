@@ -1,4 +1,4 @@
-from faces import FaceCollection, Face
+from geoalt_geometry.faces import FaceCollection, Face
 
 class STLCreator:
     '''

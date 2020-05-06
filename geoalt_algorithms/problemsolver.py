@@ -1,7 +1,8 @@
-from faces import Face
 import numpy as np
 import math
-from zero_phi_strategy import ZeroPhiStrategy, inject
+
+from geoalt_algorithms.zero_phi_strategy import ZeroPhiStrategy, inject
+from geoalt_geometry.faces import Face
 
 def single_face_algorithm(face, atype="additive", phi_min=np.pi/4, zero_phi_strategy=ZeroPhiStrategy.NONE):
     if (isinstance(face, Face) is False):

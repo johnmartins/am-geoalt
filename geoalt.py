@@ -1,8 +1,8 @@
 import sys
 import argparse
-from handle_stl import search_and_solve
-import geoalt_exceptions as geoexc
-from zero_phi_strategy import ZeroPhiStrategy
+from geoalt_stl.handle_stl import search_and_solve
+import geoalt_exceptions.exceptions as geoexc
+from geoalt_algorithms.zero_phi_strategy import ZeroPhiStrategy
 
 # Parse command line arguments
 parser = argparse.ArgumentParser()
